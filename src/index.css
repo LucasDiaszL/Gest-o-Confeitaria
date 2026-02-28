@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Opcional: Um fundo suave para o tema de confeitaria */
+body {
+  @apply bg-slate-50 text-slate-900;
+}
