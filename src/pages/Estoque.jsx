@@ -1,59 +1,79 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../services/supabaseClient'
+import { useInsumos } from '../hooks/useInsumos';
 
-export function Estoque() {
-  const [insumos, setInsumos] = useState([])
-  const [loading, setLoading] = useState(true)
+export function Estoque({ insumos, loading, error, funcaoExcluir }) {
 
-  async function buscarEstoque() {
-  try {
-    setLoading(true); // Garante que o loading comece antes da busca
-    const { data, error } = await supabase
-      .from('insumos')
-      .select('*')
-      .order('nome', { ascending: true });
 
-    if (error) throw error;
-    setInsumos(data || []);
-  } catch (error) {
-    console.error('Erro ao buscar:', error.message);
-  } finally {
-    setLoading(false); // Só desliga o loading quando tudo terminar
-  }
-}
+  const handleExcluir = async (id, nome) => {
+    if (window.confirm(`Tem certeza que deseja remover "${nome}" do estoque?`)) {
+      const result = await funcaoExcluir(id);
+      if (!result.success) alert("Erro ao excluir: " + result.error);
+    }
+  };
 
-  useEffect(() => {
-    buscarEstoque()
-  }, [])
+  if (loading) return (
+    <div className="flex justify-center items-center py-20">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+    </div>
+  );
 
-  if (loading) return <p className="text-pink-500">Carregando estoque...</p>
+  if (error) return (
+    <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl text-center">
+      Erro ao carregar estoque: {error}
+    </div>
+  );
 
   return (
-    <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-pink-100">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-pink-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-pink-800 uppercase">Insumo</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-pink-800 uppercase">Quantidade</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-pink-800 uppercase">Status</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {insumos.map((item) => (
-            <tr key={item.id} className="hover:bg-pink-50/30 transition-colors">
-              <td className="px-6 py-4 font-medium text-gray-700">{item.nome}</td>
-              <td className="px-6 py-4 text-gray-600">{item.quantidade_atual} {item.unidade_medida}</td>
-              <td className="px-6 py-4">
-                {item.quantidade_atual <= item.estoque_minimo ? (
-                  <span className="px-2 py-1 text-xs font-semibold bg-red-100 text-red-700 rounded-full">Repor Urgente</span>
-                ) : (
-                  <span className="px-2 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">OK</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-700">
+      {insumos.length > 0 ? (
+        insumos.map((item) => (
+          <div 
+            key={item.id} 
+            className="bg-white p-6 rounded-[2rem] shadow-sm border border-pink-50 hover:shadow-md transition-all group relative"
+          >
+            {/* Botão de Excluir - Aparece no Hover */}
+            <button 
+              onClick={() => handleExcluir(item.id, item.nome)}
+              className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+              title="Excluir insumo"
+            >
+              🗑️
+            </button>
+
+            <div className="flex justify-between items-start mb-4">
+              <div className="bg-pink-50 p-3 rounded-2xl group-hover:bg-pink-100 transition-colors">
+                <span className="text-xl text-pink-600">📦</span>
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                Ref: {item.id.toString().slice(0, 5)}
+              </span>
+            </div>
+            
+            <h3 className="text-lg font-black text-slate-800 mb-1 capitalize">
+              {item.nome}
+            </h3>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">
+              Matéria-prima
+            </p>
+
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-slate-900">
+                {item.quantidade_atual}
+              </span>
+              <span className="text-slate-500 font-bold uppercase text-xs">
+                {item.unidade_medida || 'g'}
+              </span>
+            </div>
+            
+            <div className="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden">
+               <div className="bg-pink-200 h-full w-2/3 rounded-full"></div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="col-span-full py-20 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+          <p className="text-slate-400 font-medium">Nenhum item encontrado no estoque.</p>
+        </div>
+      )}
     </div>
-  )
+  );
 }
