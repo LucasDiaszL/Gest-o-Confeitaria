@@ -21,19 +21,22 @@ export const createInsumo = async (novoInsumo) => {
     .single();
 
   if (existente) {
-    // 2. Se existir, soma a quantidade nova com a antiga
+    // 2. Se existir, soma a quantidade e ATUALIZA o preço com o valor novo
     const novaQuantidade = existente.quantidade_atual + novoInsumo.quantidade_atual;
     
     const { data, error } = await supabase
       .from('insumos')
-      .update({ quantidade_atual: novaQuantidade })
+      .update({ 
+        quantidade_atual: novaQuantidade,
+        preco: novoInsumo.preco // Atualiza para o preço da compra mais recente
+      })
       .eq('id', existente.id)
       .select();
     
     if (error) throw error;
     return data;
   } else {
-    // 3. Se não existir, insere um novo registro
+    // 3. Se não existir, insere um novo registro (já leva o preco no objeto novoInsumo)
     const { data, error } = await supabase
       .from('insumos')
       .insert([novoInsumo])
@@ -44,7 +47,7 @@ export const createInsumo = async (novoInsumo) => {
   }
 };
 
-// Nova função: Deletar Insumo
+// Deletar Insumo
 export const deleteInsumo = async (id) => {
   const { error } = await supabase
     .from('insumos')

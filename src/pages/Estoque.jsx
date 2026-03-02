@@ -30,6 +30,8 @@ export function Estoque({ insumos, loading, error, funcaoExcluir }) {
           const qtdAtual = Number(item.quantidade_atual) || 0;
           const qtdMinima = Number(item.estoque_minimo) || 5; 
           const isCritico = qtdAtual <= qtdMinima;
+          // PEGA O PREÇO DO BANCO
+          const precoUnidade = Number(item.preco) || 0;
 
           return (
             <div
@@ -40,7 +42,7 @@ export function Estoque({ insumos, loading, error, funcaoExcluir }) {
                   : "border-pink-50 hover:shadow-md"
               }`}
             >
-              {/* BOTÃO DE EXCLUIR ARRUMADO */}
+              {/* BOTÃO DE EXCLUIR */}
               <button
                 onClick={() => handleExcluir(item.id, item.nome)}
                 className="absolute top-4 right-4 z-20 p-2 bg-white/90 backdrop-blur-sm text-slate-400 hover:text-red-500 hover:bg-white rounded-xl transition-all shadow-sm border border-slate-100 opacity-0 group-hover:opacity-100"
@@ -56,7 +58,6 @@ export function Estoque({ insumos, loading, error, funcaoExcluir }) {
                   <span className="text-xl">{isCritico ? "⚠️" : "📦"}</span>
                 </div>
                 
-                {/* ETIQUETA CRÍTICO */}
                 {isCritico && (
                   <span className="mr-8 bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded-lg uppercase shadow-sm">
                     Crítico
@@ -67,9 +68,13 @@ export function Estoque({ insumos, loading, error, funcaoExcluir }) {
               <h3 className="text-lg font-black text-slate-800 mb-1 capitalize">
                 {item.nome}
               </h3>
-              <p className={`text-[10px] font-bold uppercase tracking-widest mb-4 ${isCritico ? "text-red-400" : "text-slate-400"}`}>
-                {isCritico ? "Reposição Necessária" : "Matéria-prima"}
-              </p>
+              
+              {/* EXIBIÇÃO DO PREÇO ADICIONADA AQUI */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-1 rounded-md uppercase">
+                  R$ {precoUnidade.toFixed(2).replace(".", ",")} / {item.unidade_medida || "un"}
+                </span>
+              </div>
 
               <div className="flex items-baseline gap-1">
                 <span className={`text-3xl font-black ${isCritico ? "text-red-600" : "text-slate-900"}`}>
@@ -80,11 +85,11 @@ export function Estoque({ insumos, loading, error, funcaoExcluir }) {
                 </span>
               </div>
 
-              {/* BARRA DE PROGRESSO DINÂMICA */}
+              {/* BARRA DE PROGRESSO */}
               <div className="mt-4 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                 <div 
                   className={`h-full rounded-full transition-all duration-1000 ${
-                    isCritico ? "bg-red-500 w-1/4" : "bg-pink-200 w-2/3"
+                    isCritico ? "bg-red-500 w-1/4" : "bg-pink-400 w-2/3"
                   }`}
                 ></div>
               </div>

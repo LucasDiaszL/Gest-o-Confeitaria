@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { getInsumos, createInsumo, deleteInsumo } from '../services/insumos';
 
-export function useInsumos() { // Este export aqui está correto (nível superior)
+export function useInsumos() { 
   const [insumos, setInsumos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Removi o 'export' daqui debaixo:
   const carregarInsumos = async () => {
     try {
       setLoading(true);
@@ -19,9 +18,10 @@ export function useInsumos() { // Este export aqui está correto (nível superio
     }
   };
 
-  // Removi o 'export' daqui debaixo também:
   const adicionarInsumo = async (novoInsumo) => {
     try {
+      // Aqui o 'novoInsumo' já carrega o { nome, quantidade_atual, unidade_medida, preco }
+      // vindo do FormNovoInsumo que a gente acabou de ajustar!
       await createInsumo(novoInsumo);
       await carregarInsumos(); 
       return { success: true };
@@ -31,19 +31,25 @@ export function useInsumos() { // Este export aqui está correto (nível superio
   };
 
   const excluirInsumo = async (id) => {
-  try {
-    await deleteInsumo(id);
-    await carregarInsumos(); // Atualiza a lista na hora
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-};
+    try {
+      await deleteInsumo(id);
+      await carregarInsumos(); 
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  };
 
   useEffect(() => {
     carregarInsumos();
   }, []);
 
-  // Você já está "exportando" elas aqui no retorno do Hook:
-  return { insumos, loading, error, adicionarInsumo, excluirInsumo, recarregar: carregarInsumos };
+  return { 
+    insumos, 
+    loading, 
+    error, 
+    adicionarInsumo, 
+    excluirInsumo, 
+    recarregar: carregarInsumos 
+  };
 }
