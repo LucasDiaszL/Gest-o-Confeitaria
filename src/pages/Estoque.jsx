@@ -10,6 +10,7 @@ export function Estoque({ insumos, loading, funcaoExcluir, funcaoEditar, darkMod
     return filtroCritico ? matchesBusca && isCritico : matchesBusca;
   });
 
+  // 1. TRATAMENTO NO CÁLCULO DO VALOR TOTAL (DINHEIRO)
   const valorTotalEstoque = insumos.reduce((acc, item) => {
     return acc + Number(item.quantidade_atual) * Number(item.preco || 0);
   }, 0);
@@ -102,7 +103,6 @@ export function Estoque({ insumos, loading, funcaoExcluir, funcaoEditar, darkMod
               }`}
             >
               <div className="flex flex-col h-full">
-                {/* TOPO: APENAS ÍCONE E ETIQUETAS */}
                 <div className="flex justify-between items-start mb-6">
                   <div className={`w-16 h-16 rounded-3xl flex items-center justify-center text-2xl shadow-inner ${
                     isCritico || statusVencimento ? (darkMode ? "bg-red-900/40" : "bg-red-100") : (darkMode ? "bg-slate-800" : "bg-slate-50")
@@ -141,11 +141,12 @@ export function Estoque({ insumos, loading, funcaoExcluir, funcaoEditar, darkMod
                   )}
                 </div>
 
-                {/* RODAPÉ: QUANTIDADE + BOTÕES DE AÇÃO (LADO A LADO) */}
+                {/* RODAPÉ: QUANTIDADE TRATADA + BOTÕES DE AÇÃO */}
                 <div className="mt-auto pt-6 border-t border-dashed border-slate-100/10 flex items-center justify-between">
                   <div className="flex items-baseline gap-2">
+                    {/* 2. TRATAMENTO PARA REMOVER DÍZIMAS (ex: 9.399... -> 9,4) */}
                     <span className={`text-4xl font-black italic ${isCritico || (statusVencimento && diferencaDias >= 0) ? "text-red-600" : (darkMode ? "text-white" : "text-slate-900")}`}>
-                      {item.quantidade_atual}
+                      {parseFloat(Number(item.quantidade_atual).toFixed(3))}
                     </span>
                     <span className={`font-black uppercase text-[10px] ${darkMode ? "text-slate-600" : "text-slate-400"}`}>
                       {item.unidade_medida}
