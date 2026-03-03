@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react';
-import { getInsumos, createInsumo, deleteInsumo } from '../services/insumos';
+import { useState, useEffect } from "react";
+import { getInsumos, createInsumo, deleteInsumo } from "../services/insumos";
 
-export function useInsumos() { 
+export function useInsumos() {
   const [insumos, setInsumos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [termoBusca, setTermoBusca] = useState("");
+
+  // Filtra os insumos em tempo real conforme você digita
+  const insumosFiltrados = insumos.filter((ins) =>
+    ins.nome.toLowerCase().includes(termoBusca.toLowerCase()),
+  );
 
   const carregarInsumos = async () => {
     try {
@@ -20,10 +27,10 @@ export function useInsumos() {
 
   const adicionarInsumo = async (novoInsumo) => {
     try {
-      // Aqui o 'novoInsumo' já carrega o { nome, quantidade_atual, unidade_medida, preco }
-      // vindo do FormNovoInsumo que a gente acabou de ajustar!
+      // carrega o { nome, quantidade_atual, unidade_medida, preco }
+      // vindo do FormNovoInsumo 
       await createInsumo(novoInsumo);
-      await carregarInsumos(); 
+      await carregarInsumos();
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -33,7 +40,7 @@ export function useInsumos() {
   const excluirInsumo = async (id) => {
     try {
       await deleteInsumo(id);
-      await carregarInsumos(); 
+      await carregarInsumos();
       return { success: true };
     } catch (err) {
       return { success: false, error: err.message };
@@ -44,12 +51,14 @@ export function useInsumos() {
     carregarInsumos();
   }, []);
 
-  return { 
-    insumos, 
-    loading, 
-    error, 
-    adicionarInsumo, 
-    excluirInsumo, 
-    recarregar: carregarInsumos 
+  return {
+    insumos: insumosFiltrados, // Retornamos a lista já filtrada
+    setTermoBusca, // Função para o input de busca usar
+    termoBusca,
+    loading,
+    error,
+    adicionarInsumo,
+    excluirInsumo,
+    recarregar: carregarInsumos,
   };
 }

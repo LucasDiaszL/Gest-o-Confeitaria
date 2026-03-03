@@ -1,14 +1,16 @@
-export function ListaVendas({ vendas, loading }) {
+export function ListaVendas({ vendas, loading, darkMode }) {
   if (loading)
     return (
-      <div className="text-center py-10 animate-pulse text-slate-400">
-        Carregando...
+      <div className={`text-center py-10 animate-pulse font-bold ${darkMode ? "text-slate-700" : "text-slate-400"}`}>
+        Carregando histórico...
       </div>
     );
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-pink-50">
-      <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+    <div className={`rounded-[2.5rem] p-8 shadow-sm border transition-all duration-500 ${
+      darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-pink-50"
+    }`}>
+      <h3 className={`text-xl font-black mb-6 flex items-center gap-2 ${darkMode ? "text-white" : "text-slate-800"}`}>
         💰 Últimas Vendas
       </h3>
 
@@ -17,37 +19,42 @@ export function ListaVendas({ vendas, loading }) {
           vendas.map((venda) => (
             <div
               key={venda.id}
-              className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-pink-100 transition-all"
+              className={`flex justify-between items-center p-4 rounded-2xl border transition-all ${
+                darkMode 
+                  ? "bg-slate-800/50 border-transparent hover:border-slate-700" 
+                  : "bg-slate-50 border-transparent hover:border-pink-100"
+              }`}
             >
               <div className="flex items-center gap-3">
-                <span className="bg-white p-2 rounded-lg shadow-sm text-lg">
+                <span className={`p-2 rounded-lg shadow-sm text-lg ${darkMode ? "bg-slate-800" : "bg-white"}`}>
                   🧁
                 </span>
                 <div>
-                  {/* Exibe o nome do produto que buscamos via relacionamento */}
-                  <p className="font-black text-slate-700 capitalize">
+                  <p className={`font-black capitalize ${darkMode ? "text-slate-200" : "text-slate-700"}`}>
                     {venda.produtos?.nome || "Produto Removido"}
                   </p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                  <p className={`text-[10px] font-bold uppercase tracking-tight ${darkMode ? "text-slate-500" : "text-slate-400"}`}>
                     {new Date(venda.criado_em).toLocaleString("pt-BR")}
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-lg font-black text-emerald-500">
+                <p className={`text-lg font-black ${darkMode ? "text-emerald-400" : "text-emerald-500"}`}>
                   + R${" "}
                   {parseFloat(venda.total || 0)
                     .toFixed(2)
                     .replace(".", ",")}
                 </p>
-                <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md font-black uppercase">
+                <span className={`text-[9px] px-2 py-0.5 rounded-md font-black uppercase ${
+                  darkMode ? "bg-slate-700 text-slate-400" : "bg-slate-100 text-slate-500"
+                }`}>
                   {venda.metodo_pagamento}
                 </span>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-center text-slate-400 py-10">
+          <p className={`text-center py-10 ${darkMode ? "text-slate-600" : "text-slate-400"}`}>
             Nenhuma venda listada.
           </p>
         )}
