@@ -4,6 +4,7 @@ export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMo
     { id: "vendas", label: "Vendas", icon: "💰" },
     { id: "produtos", label: "Produtos", icon: "🧁" },
     { id: "estoque", label: "Estoque", icon: "📦" },
+    { id: "relatorios", label: "Relatórios", icon: "📊" },
   ];
 
   return (
