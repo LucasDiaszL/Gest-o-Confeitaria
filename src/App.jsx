@@ -102,6 +102,7 @@ function App() {
         abaAtiva={aba}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
+        insumos={insumos} // 👈 ADICIONE ESTA LINHA AQUI
         setAbaAtiva={(novaAba) => {
           setAba(novaAba);
           setShowForm(false);

@@ -1,5 +1,5 @@
 // components/Sidebar.jsx
-export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMode, setDarkMode }) {
+export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMode, setDarkMode, insumos = [] }) {
   const menus = [
     { id: "vendas", label: "Vendas", icon: "💰" },
     { id: "produtos", label: "Produtos", icon: "🧁" },
@@ -7,12 +7,28 @@ export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMo
     { id: "relatorios", label: "Relatórios", icon: "📊" },
   ];
 
+  // 1. FILTRAR ITENS CRÍTICOS
+  const itensCriticos = insumos.filter(i => 
+    (Number(i.quantidade_atual) || 0) <= (Number(i.estoque_minimo) || 5)
+  );
+
+  // 2. FUNÇÃO PARA ENVIAR LISTA AO WHATSAPP
+  const enviarListaWhatsApp = () => {
+    if (itensCriticos.length === 0) return;
+    
+    const saudacao = "🍰 *DOCO CONTROLE - ALERTA DE ESTOQUE*%0A";
+    const lista = itensCriticos.map(i => 
+      `• *${i.nome.toUpperCase()}*: Restam apenas ${parseFloat(Number(i.quantidade_atual).toFixed(2))}${i.unidade_medida}`
+    ).join('%0A');
+    
+    const msg = `${saudacao}%0AOlá! Preciso repor estes itens para não parar a produção:%0A%0A${lista}`;
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
+  };
+
   return (
     <aside 
       className={`fixed left-0 top-0 h-screen transition-all duration-300 z-50 flex flex-col border-r shadow-2xl ${
-        darkMode 
-          ? "bg-slate-900 border-slate-800 text-white" 
-          : "bg-white border-pink-100 text-slate-800"
+        darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-pink-100 text-slate-800"
       } ${collapsed ? "w-20" : "w-64"}`}
     >
       {/* LOGO */}
@@ -49,13 +65,34 @@ export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMo
         ))}
       </nav>
 
-      {/* ☀️ BOTÃO DARK/LIGHT MODE - ADICIONE ESTE BLOCO ABAIXO */}
+      {/* ⚠️ CENTRAL DE ALERTAS + WHATSAPP */}
+      {itensCriticos.length > 0 && (
+        <div className={`mx-3 mb-4 overflow-hidden rounded-3xl border transition-all ${
+          darkMode ? "bg-red-950/20 border-red-900/50" : "bg-red-50 border-red-100"
+        }`}>
+          <button 
+            onClick={enviarListaWhatsApp}
+            className={`w-full p-4 flex items-center gap-3 hover:bg-red-500/10 transition-colors ${collapsed ? "justify-center" : ""}`}
+            title="Enviar lista para o WhatsApp"
+          >
+            <span className="text-xl animate-bounce">⚠️</span>
+            {!collapsed && (
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase text-red-500 leading-none mb-1">Reposição!</p>
+                <p className={`text-[11px] font-bold ${darkMode ? "text-white" : "text-slate-700"}`}>
+                  {itensCriticos.length} itens críticos
+                </p>
+              </div>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* ☀️ BOTÃO DARK/LIGHT MODE */}
       <button 
         onClick={() => setDarkMode(!darkMode)}
         className={`p-6 flex items-center transition-all border-t ${
-          darkMode 
-            ? "border-slate-800 text-yellow-400 hover:bg-slate-800" 
-            : "border-pink-50 text-slate-400 hover:text-pink-500"
+          darkMode ? "border-slate-800 text-yellow-400 hover:bg-slate-800" : "border-pink-50 text-slate-400 hover:text-pink-500"
         } ${collapsed ? "justify-center" : "justify-start px-8 gap-4"}`}
       >
         <span className="text-xl">{darkMode ? "☀️" : "🌙"}</span>
