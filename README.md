@@ -1,16 +1,28 @@
-# React + Vite
+# 🍰 Doce Controle - Gestão Inteligente para Confeitaria
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O **Doce Controle** é uma aplicação web focada em transformar a rotina de confeiteiras independentes. O sistema vai além de um simples PDV, oferecendo inteligência de dados para garantir que cada doce vendido gere lucro real.
 
-Currently, two official plugins are available:
+## 🚀 Funcionalidades Principais
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* **📊 Inteligência de Vendas**: Painel com faturamento bruto, ticket médio e cálculo automático de lucro líquido.
+* **📈 Gráficos de Desempenho**: Visualização comparativa entre Vendas vs. Lucro Real para tomada de decisão estratégica.
+* **📦 Gestão de Estoque**: Controle de insumos com alertas de reposição e monitoramento de validade.
+* **🧁 Ficha Técnica Integrada**: Cálculo automático do custo de produção de cada produto baseado nos preços atuais dos insumos.
+* **🌓 Modo Escuro**: Interface adaptativa para maior conforto visual durante longas horas de gestão.
 
-## React Compiler
+## 🛠️ Tecnologias Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **React + Vite**: Performance e rapidez na interface.
+* **Tailwind CSS**: Design moderno, responsivo e "chic".
+* **Supabase**: Banco de dados em tempo real e autenticação segura.
+* **Recharts**: Gráficos interativos para análise de dados.
 
-## Expanding the ESLint configuration
+## 📈 Como o Lucro é Calculado?
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+O sistema utiliza uma lógica de **Custo de Mercadoria Vendida (CMV)** automatizada:
+1.  O usuário cadastra o insumo (ex: 400g de Granulado por R$ 44,99).
+2.  O sistema calcula o preço por grama ($R\$ 0,11/g$).
+3.  Ao registrar uma venda, o sistema subtrai o custo proporcional de cada ingrediente do valor total, exibindo o **Lucro Líquido Real**.
+
+---
+Desenvolvido com ❤️ para facilitar a vida de quem adoça o mundo.
