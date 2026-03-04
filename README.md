@@ -25,4 +25,4 @@ O sistema utiliza uma lógica de **Custo de Mercadoria Vendida (CMV)** automatiz
 3.  Ao registrar uma venda, o sistema subtrai o custo proporcional de cada ingrediente do valor total, exibindo o **Lucro Líquido Real**.
 
 ---
-Desenvolvido com ❤️ para facilitar a vida de quem adoeça o mundo.
+Desenvolvido com ❤️ para facilitar a vida de quem adoça o mundo.
