@@ -53,21 +53,54 @@ function App() {
 
   const handleVendaManual = async (produto, metodo) => {
     try {
+      // 1. Registra a venda
       const { error: erroVenda } = await supabase.from("vendas").insert([
-        { produto_id: produto.id, quantidade: 1, metodo_pagamento: metodo, total: produto.preco_venda },
+        { 
+          produto_id: produto.id, 
+          quantidade: 1, 
+          metodo_pagamento: metodo, 
+          total: produto.preco_venda 
+        },
       ]);
+      
       if (erroVenda) throw erroVenda;
-      const { data: receita } = await supabase.from("ingredientes_produto").select("insumo_id, quantidade_utilizada").eq("produto_id", produto.id);
-      if (receita) {
-        const promessas = receita.map(async (item) => {
-          const { data: ins } = await supabase.from("insumos").select("quantidade_atual").eq("id", item.insumo_id).single();
-          if (ins) return supabase.from("insumos").update({ quantidade_atual: ins.quantidade_atual - item.quantidade_utilizada }).eq("id", item.insumo_id);
-        });
-        await Promise.all(promessas);
+
+      // 2. Busca a receita (ingredientes)
+      const { data: receita, error: erroReceita } = await supabase
+        .from("ingredientes_produto")
+        .select("insumo_id, quantidade_utilizada")
+        .eq("produto_id", produto.id);
+
+      if (erroReceita) throw erroReceita;
+
+      // 3. Atualiza o estoque de forma sequencial para evitar conflitos
+      if (receita && receita.length > 0) {
+        for (const item of receita) {
+          const { data: ins } = await supabase
+            .from("insumos")
+            .select("quantidade_atual")
+            .eq("id", item.insumo_id)
+            .single();
+
+          if (ins) {
+            await supabase
+              .from("insumos")
+              .update({ quantidade_atual: ins.quantidade_atual - item.quantidade_utilizada })
+              .eq("id", item.insumo_id);
+          }
+        }
       }
-      await Promise.all([recarregarIns(), recarregarVendas()]);
+
+      // 4. Sincronização Final: Aguarda o banco confirmar TUDO antes de atualizar a tela
+      await Promise.all([
+        recarregarIns(),
+        recarregarVendas(),
+        recarregarProd() // Importante recarregar produtos também se houver dependência
+      ]);
+
       mostrarToast("Venda realizada com sucesso! 🧁"); 
     } catch (error) {
+      console.error("Erro na venda:", error);
       mostrarToast("Erro ao vender: " + error.message, "erro");
     }
   };
