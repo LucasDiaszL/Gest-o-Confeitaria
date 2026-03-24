@@ -1,4 +1,4 @@
-export function ListaVendas({ vendas, loading, darkMode }) {
+export function ListaVendas({ vendas, loading, darkMode, onEditar, onExcluir }) {
   if (loading)
     return (
       <div className={`text-center py-10 animate-pulse font-bold ${darkMode ? "text-slate-700" : "text-slate-400"}`}>
@@ -50,6 +50,23 @@ export function ListaVendas({ vendas, loading, darkMode }) {
                 }`}>
                   {venda.metodo_pagamento}
                 </span>
+                
+                {/* 👇 NOVOS BOTÕES DE AÇÃO AQUI 👇 */}
+                <div className="flex justify-end gap-3 mt-2 border-t pt-2 border-slate-100 dark:border-slate-700">
+                   <button 
+                     onClick={() => onEditar(venda.id, venda.total, venda.metodo_pagamento)} 
+                     className="text-blue-500 hover:scale-125 transition-transform text-sm" 
+                     title="Editar">
+                     ✏️
+                   </button>
+                   <button 
+                     onClick={() => onExcluir(venda.id, venda.produto_id)} 
+                     className="text-red-500 hover:scale-125 transition-transform text-sm" 
+                     title="Excluir">
+                     🗑️
+                   </button>
+                </div>
+
               </div>
             </div>
           ))
