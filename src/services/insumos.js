@@ -1,34 +1,31 @@
 import { supabase } from './supabaseClient';
 
-// Busca todos os insumos
+// 1. Busca todos os insumos (Usando 'preco' sem acento conforme seu banco)
 export const getInsumos = async () => {
   const { data, error } = await supabase
     .from('insumos')
-    .select('*')
+    .select('id, nome, preco, unidade_medida, quantidade_atual, estoque_minimo, data_validade')
     .order('nome', { ascending: true });
   
   if (error) throw error;
   return data;
 };
 
-// Cria ou Soma Insumos (Lógica de Upsert manual)
+// 2. Cria ou Soma Insumos
 export const createInsumo = async (novoInsumo) => {
-  // 1. Procura se já existe um insumo com esse nome
   const { data: existente } = await supabase
     .from('insumos')
-    .select('*')
-    .ilike('nome', novoInsumo.nome)
-    .single();
+    .select('id, quantidade_atual')
+    .eq('nome', novoInsumo.nome)
+    .maybeSingle();
 
   if (existente) {
-    // 2. Se existir, soma a quantidade e ATUALIZA o preço com o valor novo
-    const novaQuantidade = existente.quantidade_atual + novoInsumo.quantidade_atual;
-    
+    const novaQuantidade = Number(existente.quantidade_atual) + Number(novoInsumo.quantidade_atual);
     const { data, error } = await supabase
       .from('insumos')
       .update({ 
         quantidade_atual: novaQuantidade,
-        preco: novoInsumo.preco // Atualiza para o preço da compra mais recente
+        preco: novoInsumo.preco || novoInsumo.preço 
       })
       .eq('id', existente.id)
       .select();
@@ -36,7 +33,6 @@ export const createInsumo = async (novoInsumo) => {
     if (error) throw error;
     return data;
   } else {
-    // 3. Se não existir, insere um novo registro (já leva o preco no objeto novoInsumo)
     const { data, error } = await supabase
       .from('insumos')
       .insert([novoInsumo])
@@ -47,7 +43,7 @@ export const createInsumo = async (novoInsumo) => {
   }
 };
 
-// Deletar Insumo
+// 3. Deletar Insumo (ESTA É A FUNÇÃO QUE ESTAVA FALTANDO NO SEU ERRO)
 export const deleteInsumo = async (id) => {
   const { error } = await supabase
     .from('insumos')

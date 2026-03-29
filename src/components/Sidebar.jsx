@@ -1,13 +1,25 @@
-// components/Sidebar.jsx
+import { 
+  LayoutDashboard, 
+  Package, 
+  ChefHat, 
+  BarChart3, 
+  Moon, 
+  Sun, 
+  ChevronLeft, 
+  ChevronRight,
+  AlertTriangle,
+  MessageCircle
+} from "lucide-react";
+
 export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMode, setDarkMode, insumos = [] }) {
   const menus = [
-    { id: "vendas", label: "Vendas", icon: "💰" },
-    { id: "produtos", label: "Produtos", icon: "🧁" },
-    { id: "estoque", label: "Estoque", icon: "📦" },
-    { id: "relatorios", label: "Relatórios", icon: "📊" },
+    { id: "vendas", label: "Vendas", icon: LayoutDashboard },
+    { id: "produtos", label: "Produtos", icon: ChefHat },
+    { id: "estoque", label: "Estoque", icon: Package },
+    { id: "relatorios", label: "Relatórios", icon: BarChart3 },
   ];
 
-  // 1. FILTRAR ITENS CRÍTICOS
+  // 1. FILTRAR ITENS CRÍTICOS (Tratando dízimas aqui também)
   const itensCriticos = insumos.filter(i => 
     (Number(i.quantidade_atual) || 0) <= (Number(i.estoque_minimo) || 5)
   );
@@ -15,104 +27,109 @@ export function Sidebar({ abaAtiva, setAbaAtiva, collapsed, setCollapsed, darkMo
   // 2. FUNÇÃO PARA ENVIAR LISTA AO WHATSAPP
   const enviarListaWhatsApp = () => {
     if (itensCriticos.length === 0) return;
-    
-    const saudacao = "🍰 *DOCO CONTROLE - ALERTA DE ESTOQUE*%0A";
+    const saudacao = "🍰 *DOCE CONTROLE - ALERTA DE ESTOQUE*%0A";
     const lista = itensCriticos.map(i => 
       `• *${i.nome.toUpperCase()}*: Restam apenas ${parseFloat(Number(i.quantidade_atual).toFixed(2))}${i.unidade_medida}`
     ).join('%0A');
-    
     const msg = `${saudacao}%0AOlá! Preciso repor estes itens para não parar a produção:%0A%0A${lista}`;
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
   return (
     <aside 
-      className={`fixed left-0 top-0 h-screen transition-all duration-300 z-50 flex flex-col border-r shadow-2xl ${
-        darkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-pink-100 text-slate-800"
-      } ${collapsed ? "w-20" : "w-64"}`}
+      className={`fixed left-0 top-0 h-screen transition-all duration-500 z-50 flex flex-col border-r ${
+        darkMode ? "bg-slate-950 border-white/5 text-white" : "bg-white border-slate-100 text-slate-800 shadow-xl"
+      } ${collapsed ? "w-24" : "w-64"}`}
     >
-      {/* LOGO */}
-      <div className={`p-6 flex items-center border-b overflow-hidden min-h-[90px] ${
-        darkMode ? "border-slate-800" : "border-pink-50"
-      } ${collapsed ? "justify-center" : "justify-start gap-3"}`}>
-        <div className={`p-2 rounded-xl flex-shrink-0 ${darkMode ? "bg-slate-800" : "bg-pink-100"}`}>
-          <span className="text-2xl">🍰</span>
+      {/* LOGO ESTILIZADA */}
+      <div className={`p-8 flex items-center min-h-[100px] transition-all ${collapsed ? "justify-center" : "gap-4"}`}>
+        <div className="w-10 h-10 rounded-2xl bg-pink-500 flex items-center justify-center shadow-lg shadow-pink-500/30 flex-shrink-0 group">
+          <ChefHat className="text-white group-hover:rotate-12 transition-transform" size={24} />
         </div>
         {!collapsed && (
-          <div className="animate-in fade-in duration-500">
-            <h1 className="text-sm font-black leading-none whitespace-nowrap">Doce Controle</h1>
+          <div className="animate-in fade-in slide-in-from-left-2 duration-500">
+            <h1 className="text-xs font-black uppercase tracking-[0.3em] leading-tight">Doce<br/><span className="text-pink-500">Controle</span></h1>
           </div>
         )}
       </div>
 
-      {/* NAVEGAÇÃO */}
-      <nav className="flex-1 p-3 space-y-2 mt-4">
-        {menus.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setAbaAtiva(item.id)}
-            className={`w-full flex items-center rounded-2xl transition-all p-4 ${
-              collapsed ? "justify-center" : "justify-start px-5 gap-4"
-            } ${
-              abaAtiva === item.id 
-                ? (darkMode ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "bg-slate-900 text-white shadow-lg") 
-                : (darkMode ? "text-slate-400 hover:bg-slate-800 hover:text-white" : "text-slate-500 hover:bg-pink-50")
-            }`}
-          >
-            <span className="text-xl flex-shrink-0">{item.icon}</span>
-            {!collapsed && <span className="font-bold text-sm">{item.label}</span>}
-          </button>
-        ))}
+      {/* NAVEGAÇÃO PRINCIPAL */}
+      <nav className="flex-1 px-4 space-y-2 mt-4">
+        {menus.map((item) => {
+          const Icon = item.icon;
+          const isActive = abaAtiva === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setAbaAtiva(item.id)}
+              className={`w-full flex items-center rounded-[1.5rem] transition-all duration-300 p-4 group ${
+                collapsed ? "justify-center" : "px-6 gap-4"
+              } ${
+                isActive 
+                  ? "bg-pink-500 text-white shadow-lg shadow-pink-500/25 scale-[1.02]" 
+                  : darkMode ? "text-slate-500 hover:bg-white/5 hover:text-white" : "text-slate-400 hover:bg-pink-50 hover:text-pink-500"
+              }`}
+            >
+              <Icon size={20} strokeWidth={isActive ? 3 : 2} className="transition-transform group-hover:scale-110" />
+              {!collapsed && (
+                <span className="font-black text-[10px] uppercase tracking-widest">{item.label}</span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      {/* ⚠️ CENTRAL DE ALERTAS + WHATSAPP */}
+      {/* ⚠️ ALERTA DE ESTOQUE (ESTILO PÍLULA) */}
       {itensCriticos.length > 0 && (
-        <div className={`mx-3 mb-4 overflow-hidden rounded-3xl border transition-all ${
-          darkMode ? "bg-red-950/20 border-red-900/50" : "bg-red-50 border-red-100"
-        }`}>
+        <div className="px-4 mb-4">
           <button 
             onClick={enviarListaWhatsApp}
-            className={`w-full p-4 flex items-center gap-3 hover:bg-red-500/10 transition-colors ${collapsed ? "justify-center" : ""}`}
-            title="Enviar lista para o WhatsApp"
+            className={`w-full flex items-center transition-all duration-300 rounded-[2rem] border overflow-hidden group ${
+              collapsed ? "justify-center p-4" : "p-4 gap-4"
+            } ${
+              darkMode 
+                ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20" 
+                : "bg-red-50 border-red-100 text-red-600 hover:bg-red-100"
+            }`}
           >
-            <span className="text-xl animate-bounce">⚠️</span>
+            <AlertTriangle size={20} className="animate-pulse flex-shrink-0" />
             {!collapsed && (
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase text-red-500 leading-none mb-1">Reposição!</p>
-                <p className={`text-[11px] font-bold ${darkMode ? "text-white" : "text-slate-700"}`}>
-                  {itensCriticos.length} itens críticos
-                </p>
+              <div className="text-left animate-in fade-in duration-500">
+                <p className="text-[9px] font-black uppercase tracking-tighter">Reposição Urgente</p>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-black">{itensCriticos.length} itens</span>
+                  <MessageCircle size={10} className="opacity-50" />
+                </div>
               </div>
             )}
           </button>
         </div>
       )}
 
-      {/* ☀️ BOTÃO DARK/LIGHT MODE */}
-      <button 
-        onClick={() => setDarkMode(!darkMode)}
-        className={`p-6 flex items-center transition-all border-t ${
-          darkMode ? "border-slate-800 text-yellow-400 hover:bg-slate-800" : "border-pink-50 text-slate-400 hover:text-pink-500"
-        } ${collapsed ? "justify-center" : "justify-start px-8 gap-4"}`}
-      >
-        <span className="text-xl">{darkMode ? "☀️" : "🌙"}</span>
-        {!collapsed && (
-          <span className="text-[10px] font-black uppercase tracking-widest">
-            {darkMode ? "Modo Claro" : "Modo Escuro"}
-          </span>
-        )}
-      </button>
+      {/* FOOTER: CONTROLES */}
+      <div className={`p-4 mt-auto border-t space-y-2 ${darkMode ? "border-white/5" : "border-slate-50"}`}>
+        {/* DARK MODE TOGGLE */}
+        <button 
+          onClick={() => setDarkMode(!darkMode)}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${darkMode ? "text-slate-400 hover:bg-white/5" : "text-slate-400 hover:bg-slate-50"}`}
+        >
+          {darkMode ? <Sun size={20} className="text-yellow-500" /> : <Moon size={20} />}
+          {!collapsed && <span className="text-[9px] font-black uppercase tracking-widest">Modo {darkMode ? 'Claro' : 'Escuro'}</span>}
+        </button>
 
-      {/* BOTÃO RECOLHER */}
-      <button 
-        onClick={() => setCollapsed(!collapsed)}
-        className={`p-6 border-t flex items-center transition-all ${
-          darkMode ? "border-slate-800 text-slate-500 hover:text-white" : "border-pink-50 text-slate-400 hover:text-pink-500"
-        } ${collapsed ? "justify-center" : "justify-start px-8 gap-4"}`}
-      >
-        <span className="text-xl">{collapsed ? "➡️" : "⬅️"}</span>
-        {!collapsed && <span className="text-[10px] font-black uppercase tracking-widest">Recolher</span>}
-      </button>
+        {/* COLLAPSE TOGGLE */}
+        <button 
+          onClick={() => setCollapsed(!collapsed)}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${darkMode ? "text-slate-400 hover:bg-white/5" : "text-slate-400 hover:bg-slate-50"}`}
+        >
+          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          {!collapsed && <span className="text-[9px] font-black uppercase tracking-widest">Recolher</span>}
+        </button>
+      </div>
     </aside>
   );
 }
