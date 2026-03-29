@@ -53,3 +53,30 @@ export const deleteInsumo = async (id) => {
   if (error) throw error;
   return true;
 };
+
+export const registrarPerdaInsumo = async (insumo, quantidade, motivo) => {
+  const custoUnitario = Number(insumo.preco) / Number(insumo.quantidade_atual || 1);
+  const prejuizoCalculado = custoUnitario * quantidade;
+
+  // 1. Registra na tabela de perdas
+  const { error: erroPerda } = await supabase
+    .from('perdas')
+    .insert([{
+      insumo_id: insumo.id,
+      quantidade_perdida: quantidade,
+      motivo: motivo,
+      custo_prejuizo: prejuizoCalculado
+    }]);
+
+  if (erroPerda) throw erroPerda;
+
+  // 2. Atualiza o estoque real subtraindo a perda
+  const { error: erroEstoque } = await supabase
+    .from('insumos')
+    .update({ 
+      quantidade_atual: Number(insumo.quantidade_atual) - quantidade 
+    })
+    .eq('id', insumo.id);
+
+  if (erroEstoque) throw erroEstoque;
+};
