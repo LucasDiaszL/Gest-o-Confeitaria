@@ -30,6 +30,7 @@ function App() {
     aoConfirmar: null,
   });
 
+  // Hooks de Dados
   const { insumos, loading: loadIns, recarregar: recarregarIns, excluirInsumo, adicionarInsumo } = useInsumos();
   const { produtos, loading: loadProd, recarregar: recarregarProd } = useProdutos();
   const { vendas, loading: loadVendas, recarregar: recarregarVendas } = useVendas();
@@ -39,9 +40,22 @@ function App() {
     setTimeout(() => setToast({ show: false, mensagem: "", tipo: "sucesso" }), 3000);
   };
 
+  // --- FUNÇÕES DE NAVEGAÇÃO E EDIÇÃO ---
+  const handleAbrirEdicao = (insumo) => {
+    setInsumoParaEditar(insumo);
+    setAba("estoque");
+    setShowForm(true);
+  };
+
+  const handleAbrirEdicaoProduto = (produto) => {
+    setProdutoParaEditar(produto);
+    setAba("produtos");
+    setShowForm(true);
+  };
+
+  // --- LÓGICA DE VENDA E ESTOQUE ---
   const handleVendaManual = async (produto, metodo) => {
     try {
-      // 1. Registra a venda
       const { error: erroVenda } = await supabase.from("vendas").insert([
         { 
           produto_id: produto.id, 
@@ -52,7 +66,6 @@ function App() {
       ]);
       if (erroVenda) throw erroVenda;
 
-      // 2. Busca a receita (ingredientes)
       const { data: receita, error: erroReceita } = await supabase
         .from("ingredientes_produto")
         .select("insumo_id, quantidade_utilizada")
@@ -60,7 +73,6 @@ function App() {
 
       if (erroReceita) throw erroReceita;
 
-      // 3. Atualiza o estoque sequencialmente
       if (receita && receita.length > 0) {
         for (const item of receita) {
           const { data: ins } = await supabase
@@ -78,13 +90,41 @@ function App() {
         }
       }
 
-      // 4. Sincronização Final
       await Promise.all([recarregarIns(), recarregarVendas(), recarregarProd()]);
       mostrarToast(`Venda de ${produto.nome} realizada! 🧁`);
     } catch (error) {
       console.error("Erro na venda:", error);
       mostrarToast("Erro ao vender: " + error.message, "erro");
     }
+  };
+
+  const handleEditarVenda = (idVenda, valorAtual, metodoAtual) => {
+    setModal({
+      show: true,
+      titulo: "Editar Venda ✏️",
+      mensagem: "Ajuste o valor ou a forma de pagamento desta venda.",
+      tipo: "input",
+      valorInput: valorAtual,
+      metodoInput: metodoAtual,
+      aoConfirmar: async (novoValor, novoMetodo) => {
+        try {
+          const { error } = await supabase
+            .from("vendas")
+            .update({
+              total: parseFloat(novoValor),
+              metodo_pagamento: novoMetodo,
+            })
+            .eq("id", idVenda);
+          
+          if (error) throw error;
+          await recarregarVendas();
+          mostrarToast("Venda atualizada!");
+          setModal((prev) => ({ ...prev, show: false }));
+        } catch (e) {
+          mostrarToast("Erro ao editar", "erro");
+        }
+      },
+    });
   };
 
   const handleExcluirVenda = (idVenda, idProduto) => {
@@ -128,8 +168,6 @@ function App() {
     });
   };
 
-  // ... (Mantenha as funções handleAbrirEdicao, handleAbrirEdicaoProduto e handleEditarVenda que você já tem)
-
   return (
     <div className={`min-h-screen flex font-sans transition-colors duration-500 ${darkMode ? "bg-slate-950 text-slate-100" : "bg-[#FDF8F9] text-slate-800"}`}>
       <Sidebar
@@ -152,7 +190,6 @@ function App() {
           
           {aba === "vendas" && (
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-10">
-              {/* Header de Vendas igual ao seu original */}
               <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                   <h2 className="text-5xl font-black tracking-tighter italic bg-gradient-to-r from-pink-500 to-rose-400 bg-clip-text text-transparent">
@@ -166,10 +203,16 @@ function App() {
                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Terminal Ativo</p>
                   </div>
                 </div>
-                <button onClick={() => recarregarVendas()} className="...">🔄 Sincronizar Cloud</button>
+                <button 
+                  onClick={() => recarregarVendas()} 
+                  className={`group flex items-center gap-2 px-8 py-4 rounded-2xl border-2 font-black text-xs transition-all shadow-sm active:scale-95 ${
+                    darkMode ? "bg-slate-900 border-slate-800 text-slate-300 hover:border-pink-500" : "bg-white border-slate-100 text-slate-500 hover:border-pink-200"
+                  }`}
+                >
+                  <span className="group-hover:rotate-180 transition-transform duration-700 inline-block">🔄</span> Sincronizar Cloud
+                </button>
               </header>
 
-              {/* Cards de métricas do dia */}
               <div className="relative p-12 rounded-[4rem] bg-slate-900 text-white shadow-2xl overflow-hidden group border border-white/5">
                 <div className="absolute -top-24 -right-24 w-96 h-96 bg-pink-500/20 rounded-full blur-[120px]"></div>
                 <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-10">
@@ -189,12 +232,11 @@ function App() {
                 </div>
               </div>
 
-              {/* Grid de Produtos para Venda */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {produtos.map((p) => (
                   <div key={p.id} className={`group relative p-8 rounded-[3.5rem] border-2 transition-all duration-500 hover:-translate-y-2 ${darkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"}`}>
                     <div className="flex flex-col items-center text-center mb-10">
-                      <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-5xl mb-6 ${darkMode ? "bg-slate-800" : "bg-pink-50/50"}`}>🧁</div>
+                      <div className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-5xl mb-6 shadow-inner ${darkMode ? "bg-slate-800" : "bg-pink-50/50"}`}>🧁</div>
                       <h3 className="font-black text-2xl tracking-tight mb-2">{p.nome}</h3>
                       <div className="px-4 py-1.5 rounded-full bg-pink-500/10 text-pink-500 font-black text-xl">
                         R$ {parseFloat(p.preco_venda).toFixed(2).replace(".", ",")}
@@ -202,7 +244,13 @@ function App() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {["Dinheiro", "PIX", "Débito", "Crédito"].map((metodo) => (
-                        <button key={metodo} onClick={() => handleVendaManual(p, metodo)} className="...">
+                        <button 
+                          key={metodo} 
+                          onClick={() => handleVendaManual(p, metodo)} 
+                          className={`flex flex-col items-center justify-center py-4 rounded-3xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm border border-transparent ${
+                            darkMode ? "bg-slate-800 text-slate-400 hover:bg-pink-500" : "bg-slate-50 text-slate-500 hover:bg-pink-500"
+                          } hover:text-white active:scale-90`}
+                        >
                           {metodo}
                         </button>
                       ))}
@@ -216,23 +264,74 @@ function App() {
 
           {aba === "produtos" && (
             <div className="space-y-8 animate-in fade-in duration-500">
-               {/* Conteúdo de Produtos que já tínhamos */}
+               <header className="flex justify-between items-end">
+                  <h2 className="text-4xl font-black tracking-tighter italic">Produtos</h2>
+                  <button onClick={() => { setShowForm(true); setProdutoParaEditar(null); }} className="px-8 py-4 rounded-[1.5rem] font-black shadow-lg bg-slate-900 text-white hover:bg-pink-500 transition-all">
+                    + Novo Produto
+                  </button>
+               </header>
+               {showForm && (
+                 <FormNovoProduto
+                   darkMode={darkMode}
+                   produtoParaEditar={produtoParaEditar}
+                   onSucesso={() => { recarregarProd(); setShowForm(false); setProdutoParaEditar(null); mostrarToast("Produto guardado!"); }}
+                   onCancelar={() => { setShowForm(false); setProdutoParaEditar(null); }}
+                 />
+               )}
                <Produtos produtos={produtos} loading={loadProd} insumos={insumos} funcaoEditar={handleAbrirEdicaoProduto} darkMode={darkMode} />
             </div>
           )}
 
           {aba === "estoque" && (
-             <div className="space-y-8 animate-in fade-in duration-500">
-                <Estoque insumos={insumos} loading={loadIns} funcaoExcluir={excluirInsumo} funcaoEditar={handleAbrirEdicao} darkMode={darkMode} />
-             </div>
+            <div className="space-y-8 animate-in fade-in duration-500">
+               <header className="flex justify-between items-end">
+                  <h2 className="text-4xl font-black tracking-tighter italic">Estoque</h2>
+                  <button onClick={() => { setShowForm(true); setInsumoParaEditar(null); }} className="px-8 py-4 rounded-[1.5rem] font-black shadow-lg bg-slate-900 text-white hover:bg-pink-500 transition-all">
+                    + Adicionar Insumo
+                  </button>
+               </header>
+               {showForm && (
+                 <FormNovoInsumo
+                   darkMode={darkMode}
+                   insumoParaEditar={insumoParaEditar}
+                   onSucesso={() => { recarregarIns(); setShowForm(false); setInsumoParaEditar(null); mostrarToast("Estoque atualizado!"); }}
+                   onCancelar={() => { setShowForm(false); setInsumoParaEditar(null); }}
+                 />
+               )}
+               <Estoque insumos={insumos} loading={loadIns} funcaoExcluir={excluirInsumo} funcaoEditar={handleAbrirEdicao} darkMode={darkMode} />
+            </div>
           )}
 
           {aba === "relatorios" && <Relatorios darkMode={darkMode} />}
         </div>
 
-        {/* Toasts e Modais de Confirmação */}
-        {toast.show && <div className="..."> {toast.mensagem} </div>}
-        {modal.show && <div className="..."> {modal.titulo} </div>}
+        {/* FEEDBACKS VISUAIS */}
+        {toast.show && (
+          <div className={`fixed bottom-10 right-10 p-4 px-6 rounded-2xl shadow-2xl z-[150] animate-in slide-in-from-bottom-5 font-black text-white ${toast.tipo === "sucesso" ? "bg-emerald-500" : "bg-red-500"}`}>
+            {toast.tipo === "sucesso" ? "✅ " : "❌ "}{toast.mensagem}
+          </div>
+        )}
+
+        {modal.show && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+            <div className={`w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl ${darkMode ? "bg-slate-900 text-white" : "bg-white text-slate-800"}`}>
+              <h3 className="text-2xl font-black mb-2 tracking-tight">{modal.titulo}</h3>
+              <p className="opacity-60 mb-6 font-bold">{modal.mensagem}</p>
+              {modal.tipo === "input" && (
+                <div className="space-y-4 mb-6">
+                  <input type="number" value={modal.valorInput} onChange={(e) => setModal({...modal, valorInput: e.target.value})} className={`w-full p-4 rounded-2xl font-black ${darkMode ? "bg-slate-800" : "bg-slate-100"}`} placeholder="Valor" />
+                  <select value={modal.metodoInput} onChange={(e) => setModal({...modal, metodoInput: e.target.value})} className={`w-full p-4 rounded-2xl font-black ${darkMode ? "bg-slate-800" : "bg-slate-100"}`}>
+                    {["Dinheiro", "PIX", "Débito", "Crédito"].map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button onClick={() => setModal({...modal, show: false})} className="flex-1 py-4 rounded-2xl font-black bg-slate-100 dark:bg-slate-800 opacity-50">Cancelar</button>
+                <button onClick={() => modal.tipo === "input" ? modal.aoConfirmar(modal.valorInput, modal.metodoInput) : modal.aoConfirmar()} className="flex-1 py-4 rounded-2xl font-black bg-pink-500 text-white">Confirmar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
