@@ -18,7 +18,6 @@ export function FormNovoInsumo({
   useEffect(() => {
     if (insumoParaEditar) {
       setNome(insumoParaEditar.nome || "");
-      // Suporta tanto 'preco' quanto 'preço' vindo do banco
       setPreco(insumoParaEditar.preco || insumoParaEditar.preço || "");
       setUnidade(insumoParaEditar.unidade_medida || "g");
       setQuantidade(insumoParaEditar.quantidade_atual || "");
@@ -32,10 +31,9 @@ export function FormNovoInsumo({
     if (enviando) return;
     setEnviando(true);
 
-    // Mapeamento corrigido: o banco usa 'preco' (sem acento) conforme os erros de schema
     const dados = {
       nome: nome.trim(),
-      preco: parseFloat(preco) || 0, 
+      preco: parseFloat(preco) || 0,
       unidade_medida: unidade,
       quantidade_atual: parseFloat(quantidade) || 0,
       estoque_minimo: parseFloat(estoqueMinimo) || 0,
@@ -43,26 +41,26 @@ export function FormNovoInsumo({
     };
 
     try {
-      let result;
+      let error;
 
       if (insumoParaEditar) {
-        // Atualização
-        result = await supabase
+        // Edita o lote específico
+        const result = await supabase
           .from("insumos")
           .update(dados)
           .eq("id", insumoParaEditar.id);
+        error = result.error;
       } else {
-        // Inserção
-        result = await supabase
-          .from("insumos")
-          .insert([dados]);
+        // Cria um NOVO lote (mesmo que o nome já exista)
+        const result = await supabase.from("insumos").insert([dados]);
+        error = result.error;
       }
 
-      if (result.error) throw result.error;
+      if (error) throw error;
 
       onSucesso();
     } catch (error) {
-      console.error("Erro ao salvar no Supabase:", error.message);
+      console.error("Erro ao salvar:", error.message);
       alert("Erro ao salvar: " + error.message);
     } finally {
       setEnviando(false);
@@ -97,15 +95,27 @@ export function FormNovoInsumo({
                 : "bg-slate-100 border-slate-200 text-slate-900 hover:bg-red-50 hover:text-red-500 hover:border-red-100"
             }`}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2.5"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </header>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-5">
           <div className="space-y-1">
-            <label className="text-[10px] font-black uppercase ml-4 opacity-40">Nome do Ingrediente</label>
+            <label className="text-[10px] font-black uppercase ml-4 opacity-40">
+              Nome do Ingrediente
+            </label>
             <input
               required
               type="text"
@@ -113,14 +123,18 @@ export function FormNovoInsumo({
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               className={`w-full p-5 rounded-3xl outline-none border-2 transition-all font-bold ${
-                darkMode ? "bg-slate-800 border-transparent focus:border-pink-500/50" : "bg-slate-50 border-transparent focus:border-pink-200"
+                darkMode
+                  ? "bg-slate-800 border-transparent focus:border-pink-500/50"
+                  : "bg-slate-50 border-transparent focus:border-pink-200"
               }`}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase ml-4 opacity-40">Preço Pago (R$)</label>
+              <label className="text-[10px] font-black uppercase ml-4 opacity-40">
+                Preço Pago (R$)
+              </label>
               <input
                 required
                 type="number"
@@ -128,17 +142,23 @@ export function FormNovoInsumo({
                 value={preco}
                 onChange={(e) => setPreco(e.target.value)}
                 className={`w-full p-5 rounded-3xl outline-none border-2 transition-all font-bold ${
-                  darkMode ? "bg-slate-800 border-transparent focus:border-pink-500/50" : "bg-slate-50 border-transparent focus:border-pink-200"
+                  darkMode
+                    ? "bg-slate-800 border-transparent focus:border-pink-500/50"
+                    : "bg-slate-50 border-transparent focus:border-pink-200"
                 }`}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase ml-4 opacity-40">Unidade</label>
+              <label className="text-[10px] font-black uppercase ml-4 opacity-40">
+                Unidade
+              </label>
               <select
                 value={unidade}
                 onChange={(e) => setUnidade(e.target.value)}
                 className={`w-full p-5 rounded-3xl outline-none border-2 transition-all font-bold appearance-none ${
-                  darkMode ? "bg-slate-800 border-transparent focus:border-pink-500/50" : "bg-slate-50 border-transparent focus:border-pink-200"
+                  darkMode
+                    ? "bg-slate-800 border-transparent focus:border-pink-500/50"
+                    : "bg-slate-50 border-transparent focus:border-pink-200"
                 }`}
               >
                 <option value="g">Grama (g)</option>
@@ -152,7 +172,9 @@ export function FormNovoInsumo({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase ml-4 opacity-40">Qtd Atual</label>
+              <label className="text-[10px] font-black uppercase ml-4 opacity-40">
+                Qtd Atual
+              </label>
               <input
                 required
                 type="number"
@@ -160,18 +182,24 @@ export function FormNovoInsumo({
                 value={quantidade}
                 onChange={(e) => setQuantidade(e.target.value)}
                 className={`w-full p-5 rounded-3xl outline-none border-2 transition-all font-bold ${
-                  darkMode ? "bg-slate-800 border-transparent focus:border-pink-500/50" : "bg-slate-50 border-transparent focus:border-pink-200"
+                  darkMode
+                    ? "bg-slate-800 border-transparent focus:border-pink-500/50"
+                    : "bg-slate-50 border-transparent focus:border-pink-200"
                 }`}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-black uppercase ml-4 opacity-40">Vencimento</label>
+              <label className="text-[10px] font-black uppercase ml-4 opacity-40">
+                Vencimento
+              </label>
               <input
                 type="date"
                 value={validade}
                 onChange={(e) => setValidade(e.target.value)}
                 className={`w-full p-5 rounded-3xl outline-none border-2 transition-all font-bold ${
-                  darkMode ? "bg-slate-800 border-transparent focus:border-pink-500/50" : "bg-slate-50 border-transparent focus:border-pink-200"
+                  darkMode
+                    ? "bg-slate-800 border-transparent focus:border-pink-500/50"
+                    : "bg-slate-50 border-transparent focus:border-pink-200"
                 }`}
               />
             </div>
@@ -182,7 +210,11 @@ export function FormNovoInsumo({
             type="submit"
             className="w-full py-6 bg-pink-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-[0.2em] shadow-lg shadow-pink-500/20 hover:bg-pink-600 active:scale-95 transition-all mt-4"
           >
-            {enviando ? "Salvando..." : insumoParaEditar ? "Atualizar Insumo" : "Cadastrar na Dispensa"}
+            {enviando
+              ? "Salvando..."
+              : insumoParaEditar
+                ? "Atualizar Insumo"
+                : "Cadastrar na Dispensa"}
           </button>
         </form>
       </div>
