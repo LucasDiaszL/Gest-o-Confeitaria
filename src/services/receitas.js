@@ -4,33 +4,19 @@ import { supabase } from "./supabaseClient";
 export const getItensReceita = async (produtoId) => {
   const { data, error } = await supabase
     .from("ingredientes_produto")
-    .select(
-      `
-    id,
-    produto_id,
-    insumo_id,
-    quantidade_utilizada,
-    insumos!fk_insumos_relacao_direta (
+    .select(`
       id,
-      nome,
-      unidade_medida,
-      preco,
-      quantidade_atual
-    )
-  `,
-    )
+      quantidade_utilizada,
+      insumos (*)
+    `) 
     .eq("produto_id", produtoId);
 
   if (error) {
-    console.error("🔥 ERRO DETALHADO DO SUPABASE:");
-    console.error("Mensagem:", error.message);
-
-    alert("Erro na busca: " + error.message);
+    console.error("Erro no Supabase:", error.message);
     return [];
   }
   return data;
 };
-
 // 2. ADICIONAR INGREDIENTE NA RECEITA
 export const addItemReceita = async (item) => {
   const { data, error } = await supabase
