@@ -9,6 +9,7 @@ import {
   ChevronRight,
   AlertTriangle,
   MessageCircle,
+  CalendarDays,
 } from "lucide-react";
 
 export function Sidebar({
@@ -25,6 +26,7 @@ export function Sidebar({
     { id: "produtos", label: "Produtos", icon: ChefHat },
     { id: "estoque", label: "Estoque", icon: Package },
     { id: "relatorios", label: "Relatórios", icon: BarChart3 },
+    { id: "agenda", label: "Agenda", icon: CalendarDays },
   ];
 
   // 1. FILTRAR ITENS CRÍTICOS (Garante que a Sidebar reaja aos dados do App.jsx)

@@ -3,6 +3,7 @@ import { Sidebar } from "./components/Sidebar";
 import { Estoque } from "./pages/Estoque";
 import { Produtos } from "./pages/Produtos";
 import { Relatorios } from "./pages/Relatorios";
+import Agenda from "./pages/Agenda"; // <--- IMPORTANTE: Importar a nova página
 import { ListaVendas } from "./components/ListaVendas";
 import { FormNovoInsumo } from "./components/FormNovoInsumo";
 import { FormNovoProduto } from "./components/FormNovoProduto";
@@ -23,15 +24,6 @@ function App() {
     show: false,
     mensagem: "",
     tipo: "sucesso",
-  });
-  const [modal, setModal] = useState({
-    show: false,
-    titulo: "",
-    mensagem: "",
-    tipo: "confirmar",
-    valorInput: "",
-    metodoInput: "",
-    aoConfirmar: null,
   });
 
   // Hooks de Dados
@@ -93,16 +85,14 @@ function App() {
   // --- LÓGICA DE VENDA MANUAL (FRENTE DE CAIXA) ---
   const handleVendaManual = async (produto, metodo) => {
     try {
-      const { error: erroVenda } = await supabase
-        .from("vendas")
-        .insert([
-          {
-            produto_id: produto.id,
-            quantidade: 1,
-            metodo_pagamento: metodo,
-            total: produto.preco_venda,
-          },
-        ]);
+      const { error: erroVenda } = await supabase.from("vendas").insert([
+        {
+          produto_id: produto.id,
+          quantidade: 1,
+          metodo_pagamento: metodo,
+          total: produto.preco_venda,
+        },
+      ]);
       if (erroVenda) throw erroVenda;
 
       const { data: receita } = await supabase
@@ -158,7 +148,7 @@ function App() {
         abaAtiva={aba}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
-        insumos={insumos} // <--- ADICIONE ESTA LINHA AQUI!
+        insumos={insumos}
         setAbaAtiva={(n) => {
           setAba(n);
           setShowForm(false);
@@ -171,7 +161,7 @@ function App() {
         className={`flex-1 min-h-screen transition-all duration-300 ${sidebarCollapsed ? "ml-20" : "ml-64"}`}
       >
         <div className="p-8 lg:p-12 max-w-[1400px] mx-auto">
-          {/* 💰 ABA VENDAS (FRENTE DE CAIXA) */}
+          {/* 💰 ABA VENDAS */}
           {aba === "vendas" && (
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
               <header className="flex justify-between items-end">
@@ -339,6 +329,15 @@ function App() {
 
           {/* 📊 ABA RELATÓRIOS */}
           {aba === "relatorios" && <Relatorios darkMode={darkMode} />}
+
+          {/* 📅 ABA AGENDA (NOVA!) */}
+          {aba === "agenda" && (
+            <Agenda
+              darkMode={darkMode}
+              produtos={produtos}
+              recarregarVendas={recarregarVendas}
+            />
+          )}
         </div>
 
         {/* NOTIFICAÇÃO TOAST */}
