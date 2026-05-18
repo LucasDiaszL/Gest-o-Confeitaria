@@ -86,3 +86,10 @@ Crie um arquivo `.env` na raiz do projeto com as credenciais do seu Supabase:
 ```env
 VITE_SUPABASE_URL=sua_url_do_supabase
 VITE_SUPABASE_ANON_KEY=sua_chave_anon_do_supabase
+
+2. Executando o Projeto Localmente
+# Instalar dependências
+npm install
+
+# Executar em modo de desenvolvimento
+npm run dev
