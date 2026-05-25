@@ -72,7 +72,7 @@ Este fluxo representa o eixo central do MVP e conecta a operação ao resultado 
 
 ### Estoque
 
-<img width="800" src="./src/assets/estoque.png"/>
+<img width="800" src="./src/assets/gest-o-confeitaria - Opera 2026-05-25 16-09-57.gif"/>
 
 ### Frente de Caixa
 
