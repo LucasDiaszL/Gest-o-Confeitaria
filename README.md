@@ -80,7 +80,7 @@ Este fluxo representa o eixo central do MVP e conecta a operação ao resultado 
 
 ### Relatórios
 
-<img width="800" src="./src/assets/relatorios.png"/>
+<img width="800" src="./src/assets/Relatorios.gif"/>
 
 ---
 
