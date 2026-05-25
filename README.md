@@ -76,7 +76,7 @@ Este fluxo representa o eixo central do MVP e conecta a operação ao resultado 
 
 ### Frente de Caixa
 
-<img width="800" src="./src/assets/FrentedeCaixa.png"/>
+<img width="800" src="./src/assets/FrentedeCaixa.gif"/>
 
 ### Relatórios
 
