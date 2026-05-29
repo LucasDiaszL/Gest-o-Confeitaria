@@ -20,15 +20,24 @@ export function Sidebar({
   darkMode,
   setDarkMode,
   insumos = [],
-}) {
+  userRole,
+}){
   const menus = [
-    { id: "vendas", label: "Vendas", icon: LayoutDashboard },
-    { id: "produtos", label: "Produtos", icon: ChefHat },
-    { id: "estoque", label: "Estoque", icon: Package },
-    { id: "relatorios", label: "Relatórios", icon: BarChart3 },
-    { id: "agenda", label: "Agenda", icon: CalendarDays },
-  ];
+  { id: "vendas", label: "Vendas", icon: LayoutDashboard },
+  { id: "produtos", label: "Produtos", icon: ChefHat },
+  { id: "estoque", label: "Estoque", icon: Package },
+  { id: "agenda", label: "Agenda", icon: CalendarDays },
 
+  ...(userRole === "admin"
+    ? [
+        {
+          id: "relatorios",
+          label: "Relatórios",
+          icon: BarChart3,
+        },
+      ]
+    : []),
+];
   // 1. FILTRAR ITENS CRÍTICOS (Garante que a Sidebar reaja aos dados do App.jsx)
   const itensCriticos = insumos.filter((i) => {
     const hoje = new Date();

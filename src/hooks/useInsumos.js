@@ -15,6 +15,11 @@ export function useInsumos() {
       const data = await getInsumos();
       setInsumos(Array.isArray(data) ? data : []);
     } catch (err) {
+      // 👇 FILTRO ADICIONADO AQUI 👇
+      // Ignora o "falso positivo" de concorrência (Race Condition) do Supabase
+      if (err.name === 'AbortError' || err?.message?.includes('Lock')) return;
+      // 👆 ---------------------- 👆
+
       console.error("Erro no hook:", err);
       setError(err.message);
     } finally {
