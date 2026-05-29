@@ -10,7 +10,9 @@ import {
   AlertTriangle,
   MessageCircle,
   CalendarDays,
+  LogOut, // <-- Ícone importado
 } from "lucide-react";
+import { supabase } from "../services/supabaseClient"; // <-- Importação do Supabase
 
 export function Sidebar({
   abaAtiva,
@@ -21,41 +23,31 @@ export function Sidebar({
   setDarkMode,
   insumos = [],
   userRole,
-}){
+}) {
   const menus = [
-  { id: "vendas", label: "Vendas", icon: LayoutDashboard },
-  { id: "produtos", label: "Produtos", icon: ChefHat },
-  { id: "estoque", label: "Estoque", icon: Package },
-  { id: "agenda", label: "Agenda", icon: CalendarDays },
+    { id: "vendas", label: "Vendas", icon: LayoutDashboard },
+    { id: "produtos", label: "Produtos", icon: ChefHat },
+    { id: "estoque", label: "Estoque", icon: Package },
+    { id: "agenda", label: "Agenda", icon: CalendarDays },
+    ...(userRole === "admin"
+      ? [{ id: "relatorios", label: "Relatórios", icon: BarChart3 }]
+      : []),
+  ];
 
-  ...(userRole === "admin"
-    ? [
-        {
-          id: "relatorios",
-          label: "Relatórios",
-          icon: BarChart3,
-        },
-      ]
-    : []),
-];
-  // 1. FILTRAR ITENS CRÍTICOS (Garante que a Sidebar reaja aos dados do App.jsx)
   const itensCriticos = insumos.filter((i) => {
     const hoje = new Date();
     const dataValidade = i.data_validade ? new Date(i.data_validade) : null;
     const isVencido = dataValidade && dataValidade < hoje;
     const isBaixoEstoque =
       (Number(i.quantidade_atual) || 0) <= (Number(i.estoque_minimo) || 5);
-
     return isBaixoEstoque || isVencido;
   });
 
-  // 2. FUNÇÃO WHATSAPP (Melhorada com formatação de dízimas)
   const enviarListaWhatsApp = () => {
     if (itensCriticos.length === 0) return;
     const saudacao = "🍰 *DOCE CONTROLE - ALERTA DE ESTOQUE*%0A";
     const lista = itensCriticos
       .map((i) => {
-        // parseFloat + toFixed resolve o problema de 0.999999999
         const qtdFormatada = parseFloat(Number(i.quantidade_atual).toFixed(2))
           .toString()
           .replace(".", ",");
@@ -65,6 +57,17 @@ export function Sidebar({
 
     const msg = `${saudacao}%0AOlá! Preciso repor estes itens para não parar a produção:%0A%0A${lista}`;
     window.open(`https://wa.me/?text=${msg}`, "_blank");
+  };
+
+  // 👇 FUNÇÃO DE LOGOUT 👇
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      // O React detecta a saída e volta pro Login automaticamente!
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
   };
 
   return (
@@ -77,7 +80,9 @@ export function Sidebar({
     >
       {/* LOGO */}
       <div
-        className={`p-8 flex items-center min-h-[100px] transition-all ${collapsed ? "justify-center" : "gap-4"}`}
+        className={`p-8 flex items-center min-h-[100px] transition-all ${
+          collapsed ? "justify-center" : "gap-4"
+        }`}
       >
         <div className="w-10 h-10 rounded-2xl bg-pink-500 flex items-center justify-center shadow-lg shadow-pink-500/30 flex-shrink-0 group">
           <ChefHat
@@ -128,10 +133,11 @@ export function Sidebar({
                 </span>
               )}
 
-              {/* 🔴 INDICADOR DE ALERTA (Pequena bolinha no ícone do estoque) */}
               {isEstoque && itensCriticos.length > 0 && (
                 <span
-                  className={`absolute ${collapsed ? "top-3 right-3" : "right-6"} flex h-2 w-2`}
+                  className={`absolute ${
+                    collapsed ? "top-3 right-3" : "right-6"
+                  } flex h-2 w-2`}
                 >
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -142,7 +148,7 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* ⚠️ BOTÃO WHATSAPP (ESTILO PÍLULA) */}
+      {/* WHATSAPP */}
       {itensCriticos.length > 0 && (
         <div className="px-4 mb-4">
           <button
@@ -174,13 +180,21 @@ export function Sidebar({
         </div>
       )}
 
-      {/* FOOTER */}
+      {/* FOOTER & LOGOUT */}
       <div
-        className={`p-4 mt-auto border-t space-y-2 ${darkMode ? "border-white/5" : "border-slate-50"}`}
+        className={`p-4 mt-auto border-t space-y-2 ${
+          darkMode ? "border-white/5" : "border-slate-50"
+        }`}
       >
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className={`w-full flex items-center rounded-2xl p-4 transition-all ${collapsed ? "justify-center" : "px-6 gap-4"} ${darkMode ? "text-slate-400 hover:bg-white/5" : "text-slate-400 hover:bg-slate-50"}`}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${
+            darkMode
+              ? "text-slate-400 hover:bg-white/5"
+              : "text-slate-400 hover:bg-slate-50"
+          }`}
         >
           {darkMode ? (
             <Sun size={20} className="text-yellow-500" />
@@ -196,12 +210,37 @@ export function Sidebar({
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`w-full flex items-center rounded-2xl p-4 transition-all ${collapsed ? "justify-center" : "px-6 gap-4"} ${darkMode ? "text-slate-400 hover:bg-white/5" : "text-slate-400 hover:bg-slate-50"}`}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${
+            darkMode
+              ? "text-slate-400 hover:bg-white/5"
+              : "text-slate-400 hover:bg-slate-50"
+          }`}
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           {!collapsed && (
             <span className="text-[9px] font-black uppercase tracking-widest">
               Recolher
+            </span>
+          )}
+        </button>
+
+        {/* 👇 NOVO BOTAO DE SAIR 👇 */}
+        <button
+          onClick={handleLogout}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${
+            darkMode
+              ? "text-rose-500 hover:bg-rose-500/10"
+              : "text-rose-500 hover:bg-rose-50"
+          }`}
+        >
+          <LogOut size={20} />
+          {!collapsed && (
+            <span className="text-[9px] font-black uppercase tracking-widest">
+              Sair da Conta
             </span>
           )}
         </button>
