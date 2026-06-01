@@ -208,7 +208,7 @@ Acesso autorizado ao sistema
 
 
 
-<img width="800" src="./src/assets/Login.png"/>
+<img width="800" src="./src/assets/Login.gif"/>
 
 
 
