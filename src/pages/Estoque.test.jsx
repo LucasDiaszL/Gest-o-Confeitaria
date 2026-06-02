@@ -114,7 +114,9 @@ describe('TC-004 – Filtrar insumos críticos', () => {
     render(<Estoque {...mockProps} />)
 
     // 2 itens críticos (Farinha + Leite) → label "2 Alertas"
-    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(
+      screen.getByText((content, el) => el?.tagName === 'H3' && content === '2')
+    ).toBeInTheDocument()
   })
 
   it('busca por nome funciona em conjunto com o filtro de críticos', async () => {
