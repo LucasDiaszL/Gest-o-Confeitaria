@@ -18,6 +18,8 @@ import { supabase } from "./services/supabaseClient";
 // 1. APP PRINCIPAL: ORQUESTRA A AUTENTICAÇÃO E MFA
 // ==========================================
 export default function App() {
+  const normalizar = (texto) =>
+  texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const { user, role, loading: authLoading } = useAuth();
   const [mfaVerified, setMfaVerified] = useState(false);
   const [mfaLoading, setMfaLoading] = useState(true);
@@ -295,6 +297,7 @@ function ConteudoSistema({ user, role }) {
               {/* BARRA DE PESQUISA (RESGATADA) */}
               <div className="relative w-full mb-8">
                 <input
+                  data-testid="buscar-produto"
                   type="text"
                   placeholder="Buscar doce por nome..."
                   value={buscaProduto}
@@ -352,16 +355,17 @@ function ConteudoSistema({ user, role }) {
                       <div className="grid grid-cols-2 gap-3">
                         {["Dinheiro", "PIX", "Débito", "Crédito"].map((metodo) => (
                           <button
-                            key={metodo}
-                            onClick={() => handleVendaManual(p, metodo)}
-                            className={`py-4 rounded-3xl text-[9px] font-black uppercase tracking-widest transition-all ${
-                              darkMode
-                                ? "bg-slate-800 text-slate-300 hover:bg-pink-500 hover:text-white"
-                                : "bg-slate-100 text-slate-700 hover:bg-pink-500 hover:text-white"
-                            } active:scale-90`}
-                          >
-                            {metodo}
-                          </button>
+  key={metodo}
+  data-testid={`btn-${normalizar(metodo)}`}
+  onClick={() => handleVendaManual(p, metodo)}
+  className={`py-4 rounded-3xl text-[9px] font-black uppercase tracking-widest transition-all ${
+    darkMode
+      ? "bg-slate-800 text-slate-300 hover:bg-pink-500 hover:text-white"
+      : "bg-slate-100 text-slate-700 hover:bg-pink-500 hover:text-white"
+  } active:scale-90`}
+>
+  {metodo}
+</button>
                         ))}
                       </div>
                     </div>
