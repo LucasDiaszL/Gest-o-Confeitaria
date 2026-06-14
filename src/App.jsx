@@ -18,8 +18,7 @@ import { supabase } from "./services/supabaseClient";
 // 1. APP PRINCIPAL: ORQUESTRA A AUTENTICAÇÃO E MFA
 // ==========================================
 export default function App() {
-  const normalizar = (texto) =>
-  texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
   const { user, role, loading: authLoading } = useAuth();
   const [mfaVerified, setMfaVerified] = useState(false);
   const [mfaLoading, setMfaLoading] = useState(true);
@@ -71,6 +70,11 @@ export default function App() {
 // ==========================================
 function ConteudoSistema({ user, role }) {
   // --- ESTADOS DA APLICAÇÃO ---
+  const normalizar = (texto) =>
+  texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   const [aba, setAba] = useState("vendas");
   const [showForm, setShowForm] = useState(false);
   const [insumoParaEditar, setInsumoParaEditar] = useState(null);
