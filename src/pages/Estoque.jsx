@@ -18,12 +18,26 @@ export function Estoque({
     motivo: "Vencimento",
   });
 
+  // FUNÇÃO DE EMOJIS DINÂMICOS PARA INSUMOS
+  const getEmojiInsumo = (nome) => {
+    const n = nome.toLowerCase();
+    if (n.includes("farinha") || n.includes("trigo")) return "🌾";
+    if (n.includes("chocolate") || n.includes("cacau")) return "🍫";
+    if (n.includes("leite") || n.includes("creme") || n.includes("condensado")) return "🥛";
+    if (n.includes("ovo")) return "🥚";
+    if (n.includes("açúcar") || n.includes("acucar")) return "🧂";
+    if (n.includes("manteiga") || n.includes("margarina")) return "🧈";
+    if (n.includes("morango") || n.includes("fruta")) return "🍓";
+    if (n.includes("coco")) return "🥥";
+    if (n.includes("embalagem") || n.includes("caixa") || n.includes("pote")) return "📦";
+    return "⚖️"; // Emoji Genérico (Balança)
+  };
+
   const insumosFiltrados = insumos.filter((item) => {
     const matchesBusca = item.nome
       .toLowerCase()
       .includes(termoBusca.toLowerCase());
 
-    // 🔥 NOVA LÓGICA: É crítico se a quantidade estiver baixa OU se estiver vencido
     const hoje = new Date();
     const dataValidade = item.data_validade
       ? new Date(item.data_validade)
@@ -37,11 +51,13 @@ export function Estoque({
 
     return filtroCritico ? matchesBusca && itemPrecisaAtencao : matchesBusca;
   });
+
   const valorTotalEstoque = insumos.reduce(
     (acc, item) =>
       acc + Number(item.quantidade_atual) * Number(item.preco || 0),
     0,
   );
+
   const totalCriticos = insumos.filter((item) => {
     const hoje = new Date();
     const dataValidade = item.data_validade
@@ -84,6 +100,7 @@ export function Estoque({
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+      
       {/* 1. DASHBOARD DE RESUMO */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="relative p-10 rounded-[3.5rem] bg-slate-900 text-white shadow-2xl overflow-hidden border border-white/5">
@@ -165,35 +182,29 @@ export function Estoque({
       {/* 3. GRID DE CARDS SLIM */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {insumosFiltrados.map((item) => {
-          const isCritico =
-            (Number(item.quantidade_atual) || 0) <=
-            (Number(item.estoque_minimo) || 5);
+          // --- LÓGICA DE ALERTA ---
+          const isCritico = (Number(item.quantidade_atual) || 0) <= (Number(item.estoque_minimo) || 5);
           const hoje = new Date();
-          const dataValidade = item.data_validade
-            ? new Date(item.data_validade)
-            : null;
-          const diffDays = dataValidade
-            ? Math.ceil((dataValidade - hoje) / (1000 * 60 * 60 * 24))
-            : null;
-          const estaVencendo =
-            diffDays !== null && diffDays <= 7 && diffDays >= 0;
+          const dataValidade = item.data_validade ? new Date(item.data_validade) : null;
+          const diffDays = dataValidade ? Math.ceil((dataValidade - hoje) / (1000 * 60 * 60 * 24)) : null;
+          const estaVencendo = diffDays !== null && diffDays <= 7 && diffDays >= 0;
           const vencido = diffDays !== null && diffDays < 0;
 
           return (
             <div
               key={item.id}
-              className={`group relative p-6 rounded-[3rem] border-2 transition-all duration-500 hover:-translate-y-2 ${
+              className={`group relative p-6 rounded-[3rem] border-2 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full ${
                 isCritico || vencido || estaVencendo
                   ? darkMode
                     ? "border-red-500/40 bg-red-500/5 shadow-2xl shadow-red-500/10"
-                    : "border-red-100 bg-red-50/50"
+                    : "border-red-200 bg-red-50/50"
                   : darkMode
                     ? "border-white/5 bg-slate-900 shadow-2xl hover:border-pink-500/30"
                     : "border-slate-100 bg-white shadow-xl hover:border-pink-100"
               }`}
             >
               {/* TAG DE VALIDADE FLUTUANTE */}
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex gap-2">
                 {vencido && (
                   <span className="bg-red-600 text-white text-[7px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
                     🚨 Vencido
@@ -201,21 +212,26 @@ export function Estoque({
                 )}
                 {estaVencendo && !vencido && (
                   <span className="bg-orange-500 text-white text-[7px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg animate-pulse">
-                    ⚠️ {diffDays}d
+                    ⚠️ Expira em {diffDays}d
+                  </span>
+                )}
+                {isCritico && !vencido && !estaVencendo && (
+                  <span className="bg-rose-500 text-white text-[7px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg animate-pulse">
+                    ⚠️ Baixo Estoque
                   </span>
                 )}
               </div>
 
-              {/* HEADER DO CARD */}
+              {/* HEADER DO CARD (AÇÕES E EMOJI) */}
               <div className="flex justify-between items-center mb-4">
                 <div
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover:rotate-6 ${isCritico || vencido ? "bg-red-500/20" : darkMode ? "bg-slate-800" : "bg-pink-50/50"}`}
                 >
-                  {item.unidade_medida === "un" ? "🥚" : "⚖️"}
+                  {getEmojiInsumo(item.nome)}
                 </div>
 
-                {/* BOTÕES DISCRETOS NO HOVER */}
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                {/* BOTÕES DE AÇÃO RÁPIDA */}
+                <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-all duration-300">
                   <button
                     onClick={() =>
                       setModalPerda({
@@ -225,14 +241,23 @@ export function Estoque({
                         motivo: "Vencimento",
                       })
                     }
+                    title="Registrar Perda"
                     className="p-2 rounded-lg bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
                   >
                     📉
                   </button>
                   <button
+                    onClick={() => funcaoEditar(item)}
+                    title="Editar Insumo"
+                    className={`p-2 rounded-lg transition-colors ${darkMode ? "bg-slate-800 text-slate-300 hover:bg-white hover:text-slate-900" : "bg-slate-100 text-slate-500 hover:bg-slate-900 hover:text-white"}`}
+                  >
+                    ✏️
+                  </button>
+                  <button
                     onClick={() => {
                       if (confirm("Excluir?")) funcaoExcluir(item.id);
                     }}
+                    title="Excluir Insumo"
                     className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
                   >
                     🗑️
@@ -241,18 +266,22 @@ export function Estoque({
               </div>
 
               {/* INFO DO INSUMO */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-4 flex-grow">
                 <h4
-                  className={`text-lg font-black capitalize tracking-tight leading-tight truncate ${darkMode ? "text-white" : "text-slate-800"}`}
+                  className={`text-lg font-black capitalize tracking-tight leading-tight truncate mb-2 ${darkMode ? "text-white" : "text-slate-800"}`}
                 >
                   {item.nome}
                 </h4>
-                <div className="flex justify-center items-center gap-2 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                  <span>R$ {Number(item.preco || 0).toFixed(2)}</span>
-                  {dataValidade && <span className="opacity-30">•</span>}
+                
+                {/* RÓTULOS DE CONTEXTO CLAROS */}
+                <div className="flex flex-col items-center gap-1 text-[8px] font-bold uppercase tracking-widest">
+                  <span className="text-slate-400">
+                    Custo/Un: <strong className={darkMode ? "text-pink-400" : "text-pink-600"}>R$ {Number(item.preco || 0).toFixed(2)}</strong>
+                  </span>
+                  
                   {dataValidade && (
-                    <span className={vencido ? "text-red-500" : ""}>
-                      {dataValidade.toLocaleDateString("pt-BR")}
+                    <span className={`px-2 py-0.5 rounded-md ${vencido ? "bg-red-500/10 text-red-500" : "bg-slate-500/10 text-slate-400"}`}>
+                      Val: {dataValidade.toLocaleDateString("pt-BR")}
                     </span>
                   )}
                 </div>
@@ -274,7 +303,7 @@ export function Estoque({
                 </div>
               </div>
 
-              {/* BOTÃO PRINCIPAL */}
+              {/* BOTÃO PRINCIPAL (AJUSTE RÁPIDO) */}
               <button
                 onClick={() => funcaoEditar(item)}
                 className={`w-full py-3 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all active:scale-95 ${

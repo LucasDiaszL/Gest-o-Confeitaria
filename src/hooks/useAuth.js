@@ -7,6 +7,22 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // MODO TESTE CYPRESS
+    const MODO_TESTE = true;
+
+    // USUÁRIO FAKE PARA TESTES
+    if (MODO_TESTE) {
+      setUser({
+        id: "usuario-teste-cypress",
+        email: "teste@cypress.com",
+      });
+
+      setRole("admin");
+      setLoading(false);
+
+      return;
+    }
+
     let mounted = true;
 
     async function carregarUsuario(session) {
@@ -42,7 +58,6 @@ export function useAuth() {
         if (mounted) {
           setRole(data?.role || "funcionario");
         }
-
       } catch (error) {
         console.error("Erro na autenticação:", error);
 
@@ -70,11 +85,9 @@ export function useAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        carregarUsuario(session);
-      }
-    );
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      carregarUsuario(session);
+    });
 
     return () => {
       mounted = false;

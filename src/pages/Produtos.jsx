@@ -30,6 +30,18 @@ export function Produtos({
     p.nome.toLowerCase().includes(busca.toLowerCase()),
   );
 
+  // FUNÇÃO DE EMOJIS DINÂMICOS
+  const getEmojiProduto = (nome) => {
+    const n = nome.toLowerCase();
+    if (n.includes("cenoura")) return "🥕";
+    if (n.includes("chocolate") || n.includes("brigadeiro")) return "🍫";
+    if (n.includes("morango") || n.includes("red velvet")) return "🍓";
+    if (n.includes("limão") || n.includes("limao")) return "🍋";
+    if (n.includes("pote")) return "🍯";
+    if (n.includes("festa") || n.includes("aniversário")) return "🎂";
+    return "🧁"; // Emoji Padrão
+  };
+
   if (loading)
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-4">
@@ -42,7 +54,7 @@ export function Produtos({
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      {/* 1. DASHBOARD DE PRODUTOS (ESTILO FRENTE DE CAIXA) */}
+      {/* 1. DASHBOARD DE PRODUTOS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
           className={`p-10 rounded-[3.5rem] border-2 transition-all flex items-center justify-between overflow-hidden relative group ${
@@ -116,32 +128,33 @@ export function Produtos({
         {produtosFiltrados.map((p) => (
           <div
             key={p.id}
-            className={`group relative p-8 rounded-[4rem] border-2 transition-all duration-500 hover:-translate-y-3 ${
+            className={`group relative p-8 rounded-[4rem] border-2 transition-all duration-500 hover:-translate-y-3 flex flex-col h-full ${
               darkMode
                 ? "bg-slate-900 border-white/5 shadow-2xl hover:border-pink-500/30"
                 : "bg-white border-slate-50 shadow-xl hover:border-pink-100"
             }`}
           >
-            <div className="flex flex-col items-center text-center mb-8">
+            <div className="flex flex-col items-center text-center mb-6 flex-grow">
               <div
                 className={`w-24 h-24 rounded-[2.5rem] flex items-center justify-center text-5xl mb-6 shadow-inner transition-all duration-500 group-hover:rotate-12 group-hover:scale-110 ${
                   darkMode ? "bg-slate-800" : "bg-pink-50/50"
                 }`}
               >
-                🍰
+                {/* EMOJI DINÂMICO RENDERIZADO AQUI */}
+                {getEmojiProduto(p.nome)}
               </div>
               <h3
-                className={`text-2xl font-black tracking-tighter leading-tight mb-2 ${darkMode ? "text-white" : "text-slate-800"}`}
+                className={`text-2xl font-black tracking-tighter leading-tight mb-3 ${darkMode ? "text-white" : "text-slate-800"}`}
               >
                 {p.nome}
               </h3>
-              <span className="px-4 py-1 rounded-full bg-pink-500/10 text-pink-500 text-[9px] font-black uppercase tracking-widest">
-                Exclusivo
+              <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest">
+                Vitrine Ativa
               </span>
             </div>
 
             <div
-              className={`p-6 rounded-[2.5rem] mb-8 flex flex-col items-center transition-colors ${darkMode ? "bg-slate-800/50" : "bg-slate-50"}`}
+              className={`p-6 rounded-[2.5rem] mb-6 flex flex-col items-center transition-colors ${darkMode ? "bg-slate-800/50" : "bg-slate-50"}`}
             >
               <p className="text-[10px] font-black uppercase opacity-40 mb-1 tracking-widest">
                 Valor na Vitrine
@@ -159,22 +172,22 @@ export function Produtos({
             </div>
 
             {/* AÇÕES (BOTÕES ARREDONDADOS) */}
-            <div className="space-y-3">
+            <div className="space-y-3 mt-auto">
               <button
                 onClick={() => handleAbrirReceita(p)}
-                className={`w-full py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 ${
+                className={`w-full py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 ${
                   darkMode
                     ? "bg-white text-slate-900 hover:bg-pink-500 hover:text-white"
                     : "bg-slate-900 text-white hover:bg-pink-600"
                 }`}
               >
-                📄 Ver Ficha Técnica
+                📄 Ficha Técnica
               </button>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => funcaoEditar(p)}
-                  className={`flex-1 py-4 rounded-2xl transition-all font-black text-[9px] uppercase tracking-widest border-2 ${
+                  className={`flex-1 py-3 rounded-2xl transition-all font-black text-[9px] uppercase tracking-widest border-2 ${
                     darkMode
                       ? "bg-slate-800 border-transparent text-slate-400 hover:border-pink-500/50 hover:text-white"
                       : "bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-pink-200"
@@ -184,7 +197,7 @@ export function Produtos({
                 </button>
                 <button
                   onClick={() => handleExcluir(p.id, p.nome)}
-                  className={`px-6 rounded-2xl transition-all border-2 ${
+                  className={`px-5 rounded-2xl transition-all border-2 ${
                     darkMode
                       ? "bg-slate-800 border-transparent text-slate-400 hover:bg-red-500/20 hover:text-red-500"
                       : "bg-slate-50 border-transparent text-slate-400 hover:bg-red-50 hover:border-red-100 hover:text-red-500"
