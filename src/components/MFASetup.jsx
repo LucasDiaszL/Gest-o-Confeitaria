@@ -1,24 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../services/supabaseClient";
 import QRCode from "qrcode";
 
 export function MFASetup() {
-
   const [qr, setQr] = useState("");
   const [factorId, setFactorId] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    generateFactor();
-  }, []);
-
-  const generateFactor = async () => {
-
-    const { data, error } =
-      await supabase.auth.mfa.enroll({
-        factorType: "totp",
-      });
+  // 🔥 CORREÇÃO LINT: Função declarada ANTES do useEffect e envolvida em useCallback
+  // para garantir imutabilidade e escopo léxico seguro.
+  const generateFactor = useCallback(async () => {
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+    });
 
     if (error) {
       setMessage(error.message);
@@ -27,19 +22,21 @@ export function MFASetup() {
 
     setFactorId(data.id);
 
-    const qrCode =
-      await QRCode.toDataURL(data.totp.uri);
-
+    const qrCode = await QRCode.toDataURL(data.totp.uri);
     setQr(qrCode);
-  };
+  }, []);
 
-  const verifyFactor = async () => {
+  // Executa o fator de geração na montagem do componente com a função já mapeada em memória
+  useEffect(() => {
+    generateFactor();
+  }, [generateFactor]);
 
-    const { error } =
-      await supabase.auth.mfa.challengeAndVerify({
-        factorId,
-        code: verifyCode,
-      });
+  // Função de verificação também protegida com useCallback
+  const verifyFactor = useCallback(async () => {
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId,
+      code: verifyCode,
+    });
 
     if (error) {
       setMessage(error.message);
@@ -47,11 +44,10 @@ export function MFASetup() {
     }
 
     setMessage("2FA ativado com sucesso!");
-  };
+  }, [factorId, verifyCode]);
 
   return (
     <div className="space-y-4">
-
       <h2 className="text-2xl font-bold">
         Configurar 2FA
       </h2>
@@ -67,7 +63,7 @@ export function MFASetup() {
       <input
         placeholder="Código do app"
         value={verifyCode}
-        onChange={(e)=>setVerifyCode(e.target.value)}
+        onChange={(e) => setVerifyCode(e.target.value)}
         className="w-full p-4 rounded-xl bg-slate-100"
       />
 
@@ -83,7 +79,6 @@ export function MFASetup() {
           {message}
         </div>
       )}
-
     </div>
   );
 }
