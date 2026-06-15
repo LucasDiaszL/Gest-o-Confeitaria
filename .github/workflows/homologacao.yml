@@ -33,12 +33,16 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # 🧪 3. ETAPA: Cypress (Executa os testes usando o binário local do node_modules)
+      # 🧪 3. ETAPA: Cypress (Executa a suíte de testes E2E)
       - name: Testes E2E (Cypress)
         uses: cypress-io/github-action@v6
         with:
+          # 🔥 SOLUÇÃO: Sobe o projeto local em segundo plano antes de testar
+          start: npm run dev
+          # 🔥 SOLUÇÃO: Diz para a esteira aguardar o Vite responder nessa URL antes de soltar o Cypress
+          wait-on: 'http://localhost:5173'
+          
           browser: chrome
-          # 🔥 SOLUÇÃO: Como instalaste manualmente, dizemos à Action para usar o npx local
           command: npx cypress run --browser chrome
           install: false
         env:
