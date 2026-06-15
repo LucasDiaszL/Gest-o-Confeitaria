@@ -8,31 +8,36 @@ export function MFASetup() {
   const [verifyCode, setVerifyCode] = useState("");
   const [message, setMessage] = useState("");
 
-  // 🔥 CORREÇÃO LINT: Função declarada ANTES do useEffect e envolvida em useCallback
-  // para garantir imutabilidade e escopo léxico seguro.
-  const generateFactor = useCallback(async () => {
-    const { data, error } = await supabase.auth.mfa.enroll({
-      factorType: "totp",
-    });
+  // 🔥 CORREÇÃO DEFINTIVA: Lógica movida para dentro do useEffect.
+  // O Linter aceita isso perfeitamente porque a função fica isolada no ciclo de montagem.
+  useEffect(() => {
+    async function inicializarMFA() {
+      try {
+        const { data, error } = await supabase.auth.mfa.enroll({
+          factorType: "totp",
+        });
 
-    if (error) {
-      setMessage(error.message);
-      return;
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+
+        setFactorId(data.id);
+
+        const qrCode = await QRCode.toDataURL(data.totp.uri);
+        setQr(qrCode);
+      } catch (err) {
+        console.error("Erro ao inicializar MFA:", err);
+      }
     }
 
-    setFactorId(data.id);
+    inicializarMFA();
+  }, []); // Array vazia = roda apenas uma vez ao montar a tela
 
-    const qrCode = await QRCode.toDataURL(data.totp.uri);
-    setQr(qrCode);
-  }, []);
-
-  // Executa o fator de geração na montagem do componente com a função já mapeada em memória
-  useEffect(() => {
-    generateFactor();
-  }, [generateFactor]);
-
-  // Função de verificação também protegida com useCallback
+  // Função de verificação protegida com useCallback
   const verifyFactor = useCallback(async () => {
+    if (!factorId || !verifyCode) return;
+    
     const { error } = await supabase.auth.mfa.challengeAndVerify({
       factorId,
       code: verifyCode,
