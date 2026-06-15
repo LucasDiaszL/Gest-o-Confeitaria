@@ -147,6 +147,7 @@ export function Estoque({
             🔍
           </span>
           <input
+            data-testid="busca-insumo"
             type="text"
             placeholder="Localizar insumo..."
             value={termoBusca}
@@ -182,6 +183,7 @@ export function Estoque({
           return (
             <div
               key={item.id}
+              data-testid="insumo-card"
               className={`group relative p-6 rounded-[3rem] border-2 transition-all duration-500 hover:-translate-y-2 ${
                 isCritico || vencido || estaVencendo
                   ? darkMode
@@ -264,6 +266,7 @@ export function Estoque({
               >
                 <div className="flex items-baseline gap-1">
                   <span
+                    data-testid="estoque-quantidade"
                     className={`text-3xl font-black tracking-tighter ${isCritico || vencido ? "text-red-500" : darkMode ? "text-white" : "text-slate-900"}`}
                   >
                     {parseFloat(Number(item.quantidade_atual).toFixed(2))}

@@ -132,7 +132,7 @@ function ConteudoSistema({ user, role }) {
       if (erroEstoque) throw erroEstoque;
       await recarregarIns();
       mostrarToast(`Perda registrada: ${insumo.nome} 🗑️`);
-    } catch (error) {
+    } catch (_error) {
       mostrarToast("Erro ao registrar perda", "erro");
     }
   };
@@ -190,7 +190,7 @@ function ConteudoSistema({ user, role }) {
 
       await Promise.all([recarregarIns(), recarregarVendas()]);
       mostrarToast(`Vendido: ${produto.nome} 🧁`, "sucesso");
-    } catch (error) {
+    } catch (_error) {
       mostrarToast("Erro na venda", "erro");
     }
   };

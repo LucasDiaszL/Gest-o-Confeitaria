@@ -10,9 +10,9 @@ import {
   AlertTriangle,
   MessageCircle,
   CalendarDays,
-  LogOut, // <-- Ícone importado
+  LogOut,
 } from "lucide-react";
-import { supabase } from "../services/supabaseClient"; // <-- Importação do Supabase
+import { supabase } from "../services/supabaseClient";
 
 export function Sidebar({
   abaAtiva,
@@ -40,31 +40,36 @@ export function Sidebar({
     const isVencido = dataValidade && dataValidade < hoje;
     const isBaixoEstoque =
       (Number(i.quantidade_atual) || 0) <= (Number(i.estoque_minimo) || 5);
+
     return isBaixoEstoque || isVencido;
   });
 
   const enviarListaWhatsApp = () => {
     if (itensCriticos.length === 0) return;
+
     const saudacao = "🍰 *DOCE CONTROLE - ALERTA DE ESTOQUE*%0A";
+
     const lista = itensCriticos
       .map((i) => {
-        const qtdFormatada = parseFloat(Number(i.quantidade_atual).toFixed(2))
+        const qtdFormatada = parseFloat(
+          Number(i.quantidade_atual).toFixed(2)
+        )
           .toString()
           .replace(".", ",");
+
         return `• *${i.nome.toUpperCase()}*: Restam apenas ${qtdFormatada} ${i.unidade_medida}`;
       })
       .join("%0A");
 
     const msg = `${saudacao}%0AOlá! Preciso repor estes itens para não parar a produção:%0A%0A${lista}`;
+
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
-  // 👇 FUNÇÃO DE LOGOUT 👇
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      // O React detecta a saída e volta pro Login automaticamente!
     } catch (error) {
       console.error("Erro ao sair:", error);
     }
@@ -90,6 +95,7 @@ export function Sidebar({
             size={24}
           />
         </div>
+
         {!collapsed && (
           <div className="animate-in fade-in slide-in-from-left-2 duration-500 leading-tight">
             <h1 className="text-xs font-black uppercase tracking-[0.3em]">
@@ -101,7 +107,7 @@ export function Sidebar({
         )}
       </div>
 
-      {/* NAVEGAÇÃO */}
+      {/* MENU */}
       <nav className="flex-1 px-4 space-y-2 mt-4">
         {menus.map((item) => {
           const Icon = item.icon;
@@ -111,6 +117,7 @@ export function Sidebar({
           return (
             <button
               key={item.id}
+              data-testid={`menu-${item.id}`}   // <-- ADICIONADO
               onClick={() => setAbaAtiva(item.id)}
               className={`w-full relative flex items-center rounded-[1.5rem] transition-all duration-300 p-4 group ${
                 collapsed ? "justify-center" : "px-6 gap-4"
@@ -127,6 +134,7 @@ export function Sidebar({
                 strokeWidth={isActive ? 3 : 2}
                 className="transition-transform group-hover:scale-110"
               />
+
               {!collapsed && (
                 <span className="font-black text-[10px] uppercase tracking-widest">
                   {item.label}
@@ -148,7 +156,7 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* WHATSAPP */}
+      {/* ALERTA WHATSAPP */}
       {itensCriticos.length > 0 && (
         <div className="px-4 mb-4">
           <button
@@ -163,11 +171,13 @@ export function Sidebar({
             }`}
           >
             <AlertTriangle size={20} className="animate-pulse flex-shrink-0" />
+
             {!collapsed && (
               <div className="text-left">
                 <p className="text-[9px] font-black uppercase tracking-tighter">
                   Reposição Urgente
                 </p>
+
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-black">
                     {itensCriticos.length} itens
@@ -180,7 +190,7 @@ export function Sidebar({
         </div>
       )}
 
-      {/* FOOTER & LOGOUT */}
+      {/* FOOTER */}
       <div
         className={`p-4 mt-auto border-t space-y-2 ${
           darkMode ? "border-white/5" : "border-slate-50"
@@ -201,6 +211,7 @@ export function Sidebar({
           ) : (
             <Moon size={20} />
           )}
+
           {!collapsed && (
             <span className="text-[9px] font-black uppercase tracking-widest">
               Modo {darkMode ? "Claro" : "Escuro"}
@@ -219,6 +230,7 @@ export function Sidebar({
           }`}
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+
           {!collapsed && (
             <span className="text-[9px] font-black uppercase tracking-widest">
               Recolher
@@ -226,7 +238,6 @@ export function Sidebar({
           )}
         </button>
 
-        {/* 👇 NOVO BOTAO DE SAIR 👇 */}
         <button
           onClick={handleLogout}
           className={`w-full flex items-center rounded-2xl p-4 transition-all ${
@@ -238,6 +249,7 @@ export function Sidebar({
           }`}
         >
           <LogOut size={20} />
+
           {!collapsed && (
             <span className="text-[9px] font-black uppercase tracking-widest">
               Sair da Conta
