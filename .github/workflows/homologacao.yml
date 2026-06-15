@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +21,23 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
+      # 🧹 1. ETAPA NOVA: ESLint (Impede que código com erros de sintaxe avance)
+      - name: Verificar Código (ESLint)
+        run: npm run lint
+
+      # 🏗️ 2. ETAPA ORIGINAL: Build (Gera a versão final do teu sistema)
       - name: Build
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      # 🧪 3. ETAPA NOVA: Cypress (Roda os testes simulando o utilizador)
+      - name: Testes E2E (Cypress)
+        uses: cypress-io/github-action@v6
+        with:
+          browser: chrome
+        # O Cypress pode precisar das tuas variáveis de ambiente para aceder ao banco
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
