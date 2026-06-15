@@ -18,26 +18,28 @@ jobs:
         with:
           node-version: 22
 
-      - name: Instalar dependencias
+      # 📦 PRECAUÇÃO MÁXIMA: Garante a instalação limpa e reconstrói todos os binários (incluindo o Cypress)
+      - name: Instalar Dependências do Sistema
         run: npm install
 
-      # 🧹 1. ETAPA NOVA: ESLint (Impede que código com erros de sintaxe avance)
+      # 🧹 1. ETAPA: ESLint (Garante a qualidade do código antes do build)
       - name: Verificar Código (ESLint)
         run: npm run lint
 
-      # 🏗️ 2. ETAPA ORIGINAL: Build (Gera a versão final do teu sistema)
-      - name: Build
+      # 🏗️ 2. ETAPA: Build (Gera a versão de produção do Vite)
+      - name: Build do Projeto
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # 🧪 3. ETAPA NOVA: Cypress (Roda os testes simulando o utilizador)
+      # 🧪 3. ETAPA: Cypress (Executa a suíte de testes E2E)
       - name: Testes E2E (Cypress)
         uses: cypress-io/github-action@v6
         with:
           browser: chrome
-        # O Cypress pode precisar das tuas variáveis de ambiente para aceder ao banco
+          # 🔥 SEGURANÇA: Avisa a Action que as dependências já foram instaladas e checadas no passo anterior
+          install: false
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
