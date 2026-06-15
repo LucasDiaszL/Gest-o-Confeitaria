@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 22
 
-      # 📦 PRECAUÇÃO MÁXIMA: Garante a instalação limpa e reconstrói todos os binários (incluindo o Cypress)
+      # 📦 PRECAUÇÃO MÁXIMA: Garante a instalação limpa do projeto
       - name: Instalar Dependências do Sistema
         run: npm install
 
@@ -33,12 +33,13 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
-      # 🧪 3. ETAPA: Cypress (Executa a suíte de testes E2E)
+      # 🧪 3. ETAPA: Cypress (Executa os testes usando o binário local do node_modules)
       - name: Testes E2E (Cypress)
         uses: cypress-io/github-action@v6
         with:
           browser: chrome
-          # 🔥 SEGURANÇA: Avisa a Action que as dependências já foram instaladas e checadas no passo anterior
+          # 🔥 SOLUÇÃO: Como instalaste manualmente, dizemos à Action para usar o npx local
+          command: npx cypress run --browser chrome
           install: false
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
