@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   getItensReceita,
   addItemReceita,
@@ -13,7 +13,10 @@ export function ModalReceita({ produto, insumos, onClose, darkMode }) {
   const [carregando, setCarregando] = useState(true);
 
   // 1. CARREGAR DADOS DA RECEITA
-  const carregarDados = async () => {
+  // 🔥 CORREÇÃO LINT: Memoriza a função com useCallback para fixar a referência de memória
+  // e evitar chamadas em cascata ou loops infinitos com o banco de dados.
+  const carregarDados = useCallback(async () => {
+    if (!produto?.id) return;
     try {
       setCarregando(true);
       const dados = await getItensReceita(produto.id);
@@ -23,11 +26,12 @@ export function ModalReceita({ produto, insumos, onClose, darkMode }) {
     } finally {
       setCarregando(false);
     }
-  };
-
-  useEffect(() => {
-    if (produto?.id) carregarDados();
   }, [produto?.id]);
+
+  // 🔥 CORREÇÃO LINT: Agora a dependência da função memorizada foi adicionada de forma segura
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
 
   // 2. CÁLCULOS DE CUSTO E LUCRO (REATIVOS)
   const { custoTotal, lucro } = useMemo(() => {
@@ -181,6 +185,7 @@ export function ModalReceita({ produto, insumos, onClose, darkMode }) {
 
               return (
                 <div
+                  document-id="ingrediente-item"
                   key={item.id}
                   className={`group flex justify-between items-center p-5 rounded-[2.5rem] border transition-all ${
                     darkMode

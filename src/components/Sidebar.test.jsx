@@ -3,6 +3,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Sidebar } from './Sidebar'
 
+vi.mock('../services/supabaseClient', () => ({
+  supabase: {
+    auth: { signOut: vi.fn().mockResolvedValue({ error: null }) },
+  },
+}))
+
 const propsBase = {
   abaAtiva: 'vendas',
   setAbaAtiva: vi.fn(),

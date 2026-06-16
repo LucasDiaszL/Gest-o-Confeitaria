@@ -12,6 +12,11 @@ export function useProdutos() {
       const data = await getProdutos();
       setProdutos(data || []);
     } catch (err) {
+      // 👇 FILTRO ADICIONADO AQUI 👇
+      // Ignora o "falso positivo" de concorrência (Race Condition) do Supabase
+      if (err.name === 'AbortError' || err?.message?.includes('Lock')) return;
+      // 👆 ---------------------- 👆
+
       setError(err.message);
     } finally {
       setLoading(false);

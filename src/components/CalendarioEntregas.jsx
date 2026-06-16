@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { supabase } from "../services/supabaseClient";
-import { Clock, Package, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 
 export function CalendarioEntregas({ darkMode }) {
   const [dataSelecionada, setDataSelecionada] = useState(new Date());
   const [eventos, setEventos] = useState([]);
-  const [vendasDoDia, setVendasDoDia] = useState([]);
 
   const extrairDataSimples = (data) => {
     if (!data) return null;
@@ -19,6 +18,7 @@ export function CalendarioEntregas({ darkMode }) {
     return data.substring(0, 10);
   };
 
+  // Carrega os dados do Supabase apenas uma vez na montagem do componente
   useEffect(() => {
     async function buscarEventos() {
       const { data } = await supabase.from("vendas").select("*, produtos(nome)");
@@ -27,10 +27,13 @@ export function CalendarioEntregas({ darkMode }) {
     buscarEventos();
   }, []);
 
-  useEffect(() => {
+  // 🔥 CORREÇÃO LINT: useMemo substitui o useEffect antigo, calculando os dados 
+  // de forma reativa durante a renderização sem causar cascading renders.
+  const vendasDoDia = useMemo(() => {
     const selecionadaStr = extrairDataSimples(dataSelecionada);
-    const filtradas = eventos.filter(v => extrairDataSimples(v.data_entrega || v.criado_em) === selecionadaStr);
-    setVendasDoDia(filtradas);
+    return eventos.filter(
+      v => extrairDataSimples(v.data_entrega || v.criado_em) === selecionadaStr
+    );
   }, [dataSelecionada, eventos]);
 
   return (

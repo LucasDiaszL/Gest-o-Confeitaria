@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testes Automatizados — Doce Controle</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:       #09090f;
+      --surface:  #111118;
+      --border:   rgba(255,255,255,0.07);
+      --pink:     #ec4899;
+      --pink-dim: rgba(236,72,153,0.13);
+      --cyan:     #06b6d4;
+      --cyan-dim: rgba(6,182,212,0.11);
+      --green:    #10b981;
+      --grn-dim:  rgba(16,185,129,0.11);
+      --yellow:   #f59e0b;
+      --text:     #f1f5f9;
+      --muted:    #64748b;
+      --r:        1.4rem;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+
+    /* ── deck ── */
+    #deck { position: relative; width: 100%; height: 100vh; }
+
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 2.5rem 4rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity .38s ease, transform .38s ease;
+      transform: translateY(20px);
+    }
+    .slide.active  { opacity: 1; pointer-events: all; transform: translateY(0); }
+    .slide.out-up  { opacity: 0; transform: translateY(-20px); }
+    .slide.out-dn  { opacity: 0; transform: translateY( 20px); }
+
+    /* ── nav bar ── */
+    #nav {
+      position: fixed; bottom: 1.8rem; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: .9rem;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 9999px; padding: .55rem 1.1rem;
+      backdrop-filter: blur(16px); z-index: 100;
+    }
+    #nav button {
+      background: none; border: none; color: var(--muted);
+      font-size: 1rem; cursor: pointer; padding: .3rem .65rem;
+      border-radius: 9999px; transition: color .2s, background .2s;
+    }
+    #nav button:hover:not(:disabled) { color: var(--text); background: rgba(255,255,255,0.08); }
+    #nav button:disabled { opacity: .22; cursor: default; }
+    #counter { font-size: .72rem; color: var(--muted); min-width: 44px; text-align: center; letter-spacing: .05em; }
+    #dots { display: flex; gap: .38rem; }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border); border: 1px solid var(--muted);
+      transition: background .3s, transform .3s; cursor: pointer;
+    }
+    .dot.on { background: var(--pink); transform: scale(1.45); border-color: var(--pink); }
+
+    /* ── tokens ── */
+    .tag {
+      display: inline-block; font-size: .62rem; font-weight: 800;
+      letter-spacing: .15em; text-transform: uppercase;
+      padding: .28rem .85rem; border-radius: 9999px; margin-bottom: 1rem;
+    }
+    .tp { background: var(--pink-dim); color: var(--pink); border: 1px solid rgba(236,72,153,.22); }
+    .tc { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,.22); }
+    .tg { background: var(--grn-dim);  color: var(--green);border: 1px solid rgba(16,185,129,.22); }
+    .ty { background: rgba(245,158,11,.11); color: var(--yellow); border: 1px solid rgba(245,158,11,.22); }
+
+    h1 { font-size: clamp(2rem,4vw,3rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.1; }
+    h2 { font-size: clamp(1.4rem,2.8vw,2rem); font-weight: 900; letter-spacing: -.025em; }
+    h3 { font-size: .95rem; font-weight: 700; margin-bottom: .4rem; }
+    p  { color: #94a3b8; line-height: 1.65; font-size: clamp(.84rem,1.3vw,.97rem); }
+    .accent  { color: var(--pink); }
+    .ac-cyan { color: var(--cyan); }
+    .ac-grn  { color: var(--green); }
+
+    /* ── cards ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.4rem 1.7rem; }
+    .grid { display: grid; gap: .9rem; width: 100%; }
+    .g2 { grid-template-columns: 1fr 1fr; }
+    .g3 { grid-template-columns: 1fr 1fr 1fr; }
+    .g4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+    .icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: .7rem; }
+    .ip { background: var(--pink-dim); }
+    .ic { background: var(--cyan-dim); }
+    .ig { background: var(--grn-dim);  }
+    .iy { background: rgba(245,158,11,.11); }
+
+    .bl-pink  { border-left: 3px solid var(--pink);  padding-left: 1rem; }
+    .bl-cyan  { border-left: 3px solid var(--cyan);  padding-left: 1rem; }
+    .bl-green { border-left: 3px solid var(--green); padding-left: 1rem; }
+
+    /* ── command chip ── */
+    .cmd {
+      display: inline-flex; align-items: center; gap: .45rem;
+      background: #0c0c13; border: 1px solid var(--border); border-radius: .55rem;
+      padding: .4rem .95rem; font-family: 'Cascadia Code','Fira Code',monospace;
+      font-size: .78rem; color: var(--green); white-space: nowrap;
+    }
+    .cmd::before { content: '$'; color: var(--muted); }
+    .cmds { display: flex; flex-direction: column; gap: .45rem; }
+    .cmd-label { font-size: .68rem; color: var(--muted); margin-bottom: .2rem; }
+
+    /* ── compare table ── */
+    .tbl { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    .tbl th, .tbl td { padding: .7rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .tbl th { color: var(--muted); font-size: .67rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .tbl td:first-child { color: #cbd5e1; font-weight: 600; }
+    .yes { color: var(--green); font-weight: 700; }
+    .no  { color: #475569; }
+
+    /* ── pill ── */
+    .pill { font-size: .67rem; font-weight: 700; letter-spacing: .04em; padding: .22rem .7rem; border-radius: 9999px; border: 1px solid var(--border); color: var(--muted); background: var(--surface); }
+    .pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+
+    /* ── helpers ── */
+    .w100 { width: 100%; }
+    .mw  { max-width: 880px; width: 100%; }
+    .mwm { max-width: 700px; width: 100%; }
+    .hdr { text-align: center; margin-bottom: 1.8rem; }
+    .hdr p { margin-top: .4rem; }
+    .mt2 { margin-top: .5rem; }
+    .mt4 { margin-top: 1rem; }
+    .mt6 { margin-top: 1.5rem; }
+    .mt8 { margin-top: 2rem; }
+    .sm  { font-size: .76rem; color: var(--muted); }
+    .row { display: flex; gap: .9rem; }
+    .col { flex-direction: column; }
+    .center { text-align: center; }
+
+    /* ── capa ── */
+    .grad { background: linear-gradient(130deg, var(--pink) 0%, #f97316 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stats { display: flex; align-items: center; gap: 2.2rem; margin-top: 2.5rem; flex-wrap: wrap; justify-content: center; }
+    .stat  { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+    .stat .n { font-size: 2.2rem; font-weight: 900; color: var(--pink); }
+    .stat .l { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+    .stat:nth-child(3) .n { color: var(--cyan); }
+    .stat:nth-child(5) .n { color: var(--green); }
+    .dvd { width: 1px; height: 36px; background: var(--border); }
+  </style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- ══ SLIDE 1 — CAPA ══ -->
+  <section class="slide active">
+    <div class="center">
+      <div class="tag tp">Apresentação Técnica</div>
+      <h1><span class="grad">Testes Automatizados</span></h1>
+      <p style="margin-top:.8rem; font-size:1rem; color:#94a3b8;">
+        Como o projeto <strong style="color:var(--text)">Doce Controle</strong> garante qualidade de código
+      </p>
+      <div class="stats">
+        <div class="stat"><span class="n">67</span><span class="l">Testes Unitários</span></div>
+        <div class="dvd"></div>
+        <div class="stat"><span class="n">2</span><span class="l">Testes E2E</span></div>
+        <div class="dvd"></div>
+        <div class="stat"><span class="n">8</span><span class="l">Arquivos de Teste</span></div>
+      </div>
+      <p class="sm mt8">Use ← → para navegar</p>
+    </div>
+  </section>
+
+  <!-- ══ SLIDE 2 — TESTE UNITÁRIO ══ -->
+  <section class="slide">
+    <div class="mw">
+      <div class="hdr">
+        <div class="tag tp">Ferramenta 1 · Vitest</div>
+        <h2>O que é um <span class="accent">Teste Unitário</span>?</h2>
+        <p>Testa funções e componentes <strong style="color:var(--text)">isoladamente</strong>, sem banco de dados real</p>
+      </div>
+
+      <div class="grid g2">
+        <div class="row col" style="gap:.9rem">
+          <div class="card bl-pink">
+            <h3>🎯 Como funciona</h3>
+            <p class="mt2">Substitui o banco de dados por um <strong style="color:var(--text)">mock</strong> (objeto fake). A função é chamada com dados controlados e o teste verifica se o resultado é o esperado — sem internet, sem Supabase.</p>
+          </div>
+          <div class="card bl-pink">
+            <h3>⚡ Por que usar</h3>
+            <p class="mt2">Os 67 testes do projeto rodam em <strong style="color:var(--green)">menos de 3 segundos</strong>. Cada função tem cenários testados: dado válido, dado inválido, erro do banco.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>📦 Onde está no projeto</h3>
+          <p class="mt2" style="font-size:.82rem">8 arquivos de teste cobrindo serviços, hooks e componentes:</p>
+          <div class="pills mt4">
+            <span class="pill">insumos.test.js</span>
+            <span class="pill">produtos.test.js</span>
+            <span class="pill">receitas.test.js</span>
+            <span class="pill">vendas.test.js</span>
+            <span class="pill">useInsumos.test.js</span>
+            <span class="pill">Estoque.test.jsx</span>
+            <span class="pill">Sidebar.test.jsx</span>
+            <span class="pill">SimuladorReajuste.test.jsx</span>
+          </div>
+          <div class="card mt4" style="background:#0c0c13; border-color:rgba(236,72,153,.15)">
+            <p style="font-size:.82rem; color:var(--text)">
+              Padrão <strong style="color:var(--pink)">AAA</strong>:
+              <span style="color:#94a3b8"> Arrange → Act → Assert</span>
+            </p>
+            <p class="sm mt2">Prepara os dados · Executa a função · Verifica o resultado</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SLIDE 3 — TESTE E2E ══ -->
+  <section class="slide">
+    <div class="mw">
+      <div class="hdr">
+        <div class="tag tc">Ferramenta 2 · Cypress</div>
+        <h2>O que é um <span class="ac-cyan">Teste E2E</span>?</h2>
+        <p>End-to-End — testa a aplicação <strong style="color:var(--text)">real no navegador</strong>, simulando um usuário de verdade</p>
+      </div>
+
+      <div class="grid g2">
+        <div class="row col" style="gap:.9rem">
+          <div class="card bl-cyan">
+            <h3>🌐 Como funciona</h3>
+            <p class="mt2">O Cypress abre o navegador, faz login com credenciais reais, clica em botões, preenche formulários e valida o que aparece na tela — exatamente como um usuário faria.</p>
+          </div>
+          <div class="card bl-cyan">
+            <h3>🔗 Por que usar</h3>
+            <p class="mt2">Garante que o fluxo completo funciona de ponta a ponta: do clique na interface até a resposta do banco de dados. Pega bugs que testes unitários não conseguem detectar.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>📦 Onde está no projeto</h3>
+          <div class="pills mt4">
+            <span class="pill" style="color:var(--cyan)">cypress/e2e/venda.cy.js</span>
+            <span class="pill" style="color:var(--cyan)">cypress/e2e/relatorios.cy.js</span>
+            <span class="pill">cypress.config.cjs</span>
+          </div>
+
+          <div class="grid g2 mt4" style="gap:.7rem">
+            <div class="card" style="background:#0c0c13; border-color:rgba(6,182,212,.15); padding:1rem">
+              <p style="font-size:.8rem; color:var(--cyan); font-weight:700; margin-bottom:.3rem">venda.cy.js</p>
+              <p class="sm">Faz uma venda e verifica que o estoque do insumo diminuiu automaticamente</p>
+            </div>
+            <div class="card" style="background:#0c0c13; border-color:rgba(6,182,212,.15); padding:1rem">
+              <p style="font-size:.8rem; color:var(--cyan); font-weight:700; margin-bottom:.3rem">relatorios.cy.js</p>
+              <p class="sm">Navega pela tela de relatórios e filtra por Hoje, 7 dias e 30 dias</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SLIDE 4 — COMPARAÇÃO ══ -->
+  <section class="slide">
+    <div class="mwm">
+      <div class="hdr">
+        <div class="tag tg">Comparação</div>
+        <h2>Unitário <span class="accent">vs</span> E2E</h2>
+        <p>Cada ferramenta tem um papel diferente — as duas se complementam</p>
+      </div>
+
+      <div class="card">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Característica</th>
+              <th style="color:var(--pink)">Vitest · Unitário</th>
+              <th style="color:var(--cyan)">Cypress · E2E</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>O que testa</td>
+              <td>Funções e componentes isolados</td>
+              <td>Fluxo completo no navegador</td>
+            </tr>
+            <tr>
+              <td>Banco de dados</td>
+              <td class="no">✗ Mock (fake)</td>
+              <td class="yes">✓ Supabase real</td>
+            </tr>
+            <tr>
+              <td>Precisa do app rodando</td>
+              <td class="no">✗ Não</td>
+              <td class="yes">✓ Sim (localhost:5173)</td>
+            </tr>
+            <tr>
+              <td>Velocidade</td>
+              <td class="yes">⚡ ~3 segundos (67 testes)</td>
+              <td class="no">🐢 ~30–60 segundos</td>
+            </tr>
+            <tr>
+              <td>Simula usuário real</td>
+              <td class="no">✗ Não</td>
+              <td class="yes">✓ Clica, digita, navega</td>
+            </tr>
+            <tr>
+              <td>Detecta bug de lógica</td>
+              <td class="yes">✓ Sim</td>
+              <td class="yes">✓ Sim</td>
+            </tr>
+            <tr>
+              <td>Detecta bug de integração</td>
+              <td class="no">✗ Não (usa mock)</td>
+              <td class="yes">✓ Sim</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SLIDE 5 — COMANDOS ══ -->
+  <section class="slide">
+    <div class="mw">
+      <div class="hdr">
+        <div class="tag tg">Como Rodar</div>
+        <h2>Comandos <span class="ac-grn">do Projeto</span></h2>
+        <p>Todos os comandos reais disponíveis no <code style="color:var(--cyan);font-size:.85rem">package.json</code></p>
+      </div>
+
+      <div class="grid g2">
+        <div class="card">
+          <div style="display:flex; align-items:center; gap:.7rem; margin-bottom:1.2rem">
+            <div class="icon ip">🧪</div>
+            <div>
+              <h3 style="margin:0">Vitest — Testes Unitários</h3>
+              <p class="sm">Não precisa do servidor rodando</p>
+            </div>
+          </div>
+          <div class="cmds">
+            <div>
+              <p class="cmd-label">Watch mode — reexecuta ao salvar (desenvolvimento)</p>
+              <span class="cmd">npm test</span>
+            </div>
+            <div>
+              <p class="cmd-label">Execução única e encerra</p>
+              <span class="cmd">npm run test:run</span>
+            </div>
+            <div>
+              <p class="cmd-label">Mostra cada teste individualmente</p>
+              <span class="cmd">npm run test:run -- --reporter=verbose</span>
+            </div>
+            <div>
+              <p class="cmd-label">Relatório de cobertura de código</p>
+              <span class="cmd">npm run test:coverage</span>
+            </div>
+            <div>
+              <p class="cmd-label">Só um arquivo específico</p>
+              <span class="cmd">npm run test:run -- src/services/insumos.test.js</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; align-items:center; gap:.7rem; margin-bottom:1.2rem">
+            <div class="icon ic">🌐</div>
+            <div>
+              <h3 style="margin:0">Cypress — Testes E2E</h3>
+              <p class="sm">Precisa do servidor rodando primeiro</p>
+            </div>
+          </div>
+          <div class="cmds">
+            <div>
+              <p class="cmd-label">1. Sobe a aplicação (terminal 1)</p>
+              <span class="cmd">npm run dev</span>
+            </div>
+            <div>
+              <p class="cmd-label">2a. Interface visual — melhor para apresentação (terminal 2)</p>
+              <span class="cmd">npx cypress open</span>
+            </div>
+            <div>
+              <p class="cmd-label">2b. Modo headless — só no terminal</p>
+              <span class="cmd">npx cypress run</span>
+            </div>
+            <div>
+              <p class="cmd-label">Rodar um arquivo específico</p>
+              <span class="cmd">npx cypress run --spec "cypress/e2e/venda.cy.js"</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── nav ── -->
+<nav id="nav">
+  <button id="bp" onclick="go(-1)" disabled>←</button>
+  <div id="dots"></div>
+  <span id="counter">1 / 5</span>
+  <button id="bn" onclick="go(1)">→</button>
+</nav>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'))
+  const total  = slides.length
+  let   cur    = 0
+
+  const dotsEl = document.getElementById('dots')
+  const ctrEl  = document.getElementById('counter')
+  const bp     = document.getElementById('bp')
+  const bn     = document.getElementById('bn')
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('span')
+    d.className = 'dot' + (i === 0 ? ' on' : '')
+    d.onclick   = () => go(i - cur)
+    dotsEl.appendChild(d)
+  })
+
+  function go(delta) {
+    const next = cur + delta
+    if (next < 0 || next >= total) return
+
+    // sai do slide atual
+    const outClass = delta > 0 ? 'out-up' : 'out-dn'
+    const leaving  = slides[cur]
+    leaving.classList.remove('active')
+    leaving.classList.add(outClass)
+    setTimeout(() => leaving.classList.remove(outClass), 400)
+
+    cur = next
+
+    // entra no próximo — limpa qualquer classe residual antes
+    const entering = slides[cur]
+    entering.classList.remove('out-up', 'out-dn')
+    // força reflow para a transição funcionar do zero
+    void entering.offsetWidth
+    entering.classList.add('active')
+
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur))
+    ctrEl.textContent = `${cur + 1} / ${total}`
+    bp.disabled = cur === 0
+    bn.disabled = cur === total - 1
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go( 1)
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1)
+  })
+</script>
+</body>
+</html>

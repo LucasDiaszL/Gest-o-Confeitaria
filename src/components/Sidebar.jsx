@@ -10,7 +10,9 @@ import {
   AlertTriangle,
   MessageCircle,
   CalendarDays,
+  LogOut,
 } from "lucide-react";
+import { supabase } from "../services/supabaseClient";
 
 export function Sidebar({
   abaAtiva,
@@ -20,16 +22,18 @@ export function Sidebar({
   darkMode,
   setDarkMode,
   insumos = [],
+  userRole,
 }) {
   const menus = [
     { id: "vendas", label: "Vendas", icon: LayoutDashboard },
     { id: "produtos", label: "Produtos", icon: ChefHat },
     { id: "estoque", label: "Estoque", icon: Package },
-    { id: "relatorios", label: "Relatórios", icon: BarChart3 },
     { id: "agenda", label: "Agenda", icon: CalendarDays },
+    ...(userRole === "admin"
+      ? [{ id: "relatorios", label: "Relatórios", icon: BarChart3 }]
+      : []),
   ];
 
-  // 1. FILTRAR ITENS CRÍTICOS (Garante que a Sidebar reaja aos dados do App.jsx)
   const itensCriticos = insumos.filter((i) => {
     const hoje = new Date();
     const dataValidade = i.data_validade ? new Date(i.data_validade) : null;
@@ -40,22 +44,35 @@ export function Sidebar({
     return isBaixoEstoque || isVencido;
   });
 
-  // 2. FUNÇÃO WHATSAPP (Melhorada com formatação de dízimas)
   const enviarListaWhatsApp = () => {
     if (itensCriticos.length === 0) return;
+
     const saudacao = "🍰 *DOCE CONTROLE - ALERTA DE ESTOQUE*%0A";
+
     const lista = itensCriticos
       .map((i) => {
-        // parseFloat + toFixed resolve o problema de 0.999999999
-        const qtdFormatada = parseFloat(Number(i.quantidade_atual).toFixed(2))
+        const qtdFormatada = parseFloat(
+          Number(i.quantidade_atual).toFixed(2)
+        )
           .toString()
           .replace(".", ",");
+
         return `• *${i.nome.toUpperCase()}*: Restam apenas ${qtdFormatada} ${i.unidade_medida}`;
       })
       .join("%0A");
 
     const msg = `${saudacao}%0AOlá! Preciso repor estes itens para não parar a produção:%0A%0A${lista}`;
+
     window.open(`https://wa.me/?text=${msg}`, "_blank");
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
   };
 
   return (
@@ -68,7 +85,9 @@ export function Sidebar({
     >
       {/* LOGO */}
       <div
-        className={`p-8 flex items-center min-h-[100px] transition-all ${collapsed ? "justify-center" : "gap-4"}`}
+        className={`p-8 flex items-center min-h-[100px] transition-all ${
+          collapsed ? "justify-center" : "gap-4"
+        }`}
       >
         <div className="w-10 h-10 rounded-2xl bg-pink-500 flex items-center justify-center shadow-lg shadow-pink-500/30 flex-shrink-0 group">
           <ChefHat
@@ -76,6 +95,7 @@ export function Sidebar({
             size={24}
           />
         </div>
+
         {!collapsed && (
           <div className="animate-in fade-in slide-in-from-left-2 duration-500 leading-tight">
             <h1 className="text-xs font-black uppercase tracking-[0.3em]">
@@ -87,7 +107,7 @@ export function Sidebar({
         )}
       </div>
 
-      {/* NAVEGAÇÃO */}
+      {/* MENU */}
       <nav className="flex-1 px-4 space-y-2 mt-4">
         {menus.map((item) => {
           const Icon = item.icon;
@@ -97,6 +117,7 @@ export function Sidebar({
           return (
             <button
               key={item.id}
+              data-testid={`menu-${item.id}`}   // <-- ADICIONADO
               onClick={() => setAbaAtiva(item.id)}
               className={`w-full relative flex items-center rounded-[1.5rem] transition-all duration-300 p-4 group ${
                 collapsed ? "justify-center" : "px-6 gap-4"
@@ -113,16 +134,18 @@ export function Sidebar({
                 strokeWidth={isActive ? 3 : 2}
                 className="transition-transform group-hover:scale-110"
               />
+
               {!collapsed && (
                 <span className="font-black text-[10px] uppercase tracking-widest">
                   {item.label}
                 </span>
               )}
 
-              {/* 🔴 INDICADOR DE ALERTA (Pequena bolinha no ícone do estoque) */}
               {isEstoque && itensCriticos.length > 0 && (
                 <span
-                  className={`absolute ${collapsed ? "top-3 right-3" : "right-6"} flex h-2 w-2`}
+                  className={`absolute ${
+                    collapsed ? "top-3 right-3" : "right-6"
+                  } flex h-2 w-2`}
                 >
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -133,7 +156,7 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* ⚠️ BOTÃO WHATSAPP (ESTILO PÍLULA) */}
+      {/* ALERTA WHATSAPP */}
       {itensCriticos.length > 0 && (
         <div className="px-4 mb-4">
           <button
@@ -148,11 +171,13 @@ export function Sidebar({
             }`}
           >
             <AlertTriangle size={20} className="animate-pulse flex-shrink-0" />
+
             {!collapsed && (
               <div className="text-left">
                 <p className="text-[9px] font-black uppercase tracking-tighter">
                   Reposição Urgente
                 </p>
+
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-black">
                     {itensCriticos.length} itens
@@ -167,17 +192,26 @@ export function Sidebar({
 
       {/* FOOTER */}
       <div
-        className={`p-4 mt-auto border-t space-y-2 ${darkMode ? "border-white/5" : "border-slate-50"}`}
+        className={`p-4 mt-auto border-t space-y-2 ${
+          darkMode ? "border-white/5" : "border-slate-50"
+        }`}
       >
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className={`w-full flex items-center rounded-2xl p-4 transition-all ${collapsed ? "justify-center" : "px-6 gap-4"} ${darkMode ? "text-slate-400 hover:bg-white/5" : "text-slate-400 hover:bg-slate-50"}`}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${
+            darkMode
+              ? "text-slate-400 hover:bg-white/5"
+              : "text-slate-400 hover:bg-slate-50"
+          }`}
         >
           {darkMode ? (
             <Sun size={20} className="text-yellow-500" />
           ) : (
             <Moon size={20} />
           )}
+
           {!collapsed && (
             <span className="text-[9px] font-black uppercase tracking-widest">
               Modo {darkMode ? "Claro" : "Escuro"}
@@ -187,12 +221,38 @@ export function Sidebar({
 
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`w-full flex items-center rounded-2xl p-4 transition-all ${collapsed ? "justify-center" : "px-6 gap-4"} ${darkMode ? "text-slate-400 hover:bg-white/5" : "text-slate-400 hover:bg-slate-50"}`}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${
+            darkMode
+              ? "text-slate-400 hover:bg-white/5"
+              : "text-slate-400 hover:bg-slate-50"
+          }`}
         >
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+
           {!collapsed && (
             <span className="text-[9px] font-black uppercase tracking-widest">
               Recolher
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className={`w-full flex items-center rounded-2xl p-4 transition-all ${
+            collapsed ? "justify-center" : "px-6 gap-4"
+          } ${
+            darkMode
+              ? "text-rose-500 hover:bg-rose-500/10"
+              : "text-rose-500 hover:bg-rose-50"
+          }`}
+        >
+          <LogOut size={20} />
+
+          {!collapsed && (
+            <span className="text-[9px] font-black uppercase tracking-widest">
+              Sair da Conta
             </span>
           )}
         </button>

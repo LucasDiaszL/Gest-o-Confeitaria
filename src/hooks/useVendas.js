@@ -20,6 +20,11 @@ export function useVendas() {
       if (error) throw error;
       setVendas(data || []);
     } catch (err) {
+      // 👇 FILTRO ADICIONADO AQUI 👇
+      // Ignora o "falso positivo" de concorrência (Race Condition) do Supabase
+      if (err.name === 'AbortError' || err?.message?.includes('Lock')) return;
+      // 👆 ---------------------- 👆
+
       console.error("Erro:", err.message);
       setVendas([]);
     } finally {
